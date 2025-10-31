@@ -130,4 +130,15 @@ OpenBox is designed to be a simple, extensible platform for teams, students, and
 
 ---
 
+## 👥 Team Members
+
+| Name | Role | Responsibilities |
+|------|------|------------------|
+| **Yuvraj** | Backend Developer | Authentication systems |
+| **Sumit** | Backend Developer | Database design & management |
+| **Oashe** | Backend Developer | AI integrations |
+| **Nihal** | Frontend Developer | User interface & experience |
+
+---
+
 > 🧑‍💻 **Team Dev4ce** — building **OpenBox** to make project file management simple, secure, and scalable for modern teams.
