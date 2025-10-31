@@ -80,7 +80,20 @@ OpenBox is designed to be a simple, extensible platform for teams, students, and
 
 ---
 
-## 🧰 6. Tech Stack
+## 🧩 6. Entity-Relationship (ER) Diagram
+
+Below is the complete **ER Diagram** representing the OpenBox database schema and relationships between entities.
+
+<p align="center">
+  <img src="./er-diagram.png" alt="OpenBox ER Diagram" width="800">
+</p>
+
+> 💡 The ER diagram illustrates all major entities — users, projects, files, changes, workspaces, collaborators, activity logs, and OAuth tokens — along with their relationships (1–N, N–M).
+
+---
+
+
+## 🧰 7. Tech Stack
 
 | Layer | Technology |
 |--------|-------------|
@@ -96,7 +109,7 @@ OpenBox is designed to be a simple, extensible platform for teams, students, and
 
 ---
 
-## 🔄 7. Workflow
+## 🔄 8. Workflow
 
 1. User signs in via OAuth or registers and authenticates using JWT.  
 2. Dashboard lists user-owned and shared projects.  
@@ -108,7 +121,7 @@ OpenBox is designed to be a simple, extensible platform for teams, students, and
 
 ---
 
-## 🎯 8. Expected Outcomes
+## 🎯 9. Expected Outcomes
 
 - A polished CRUD-based project handling app (OpenBox) for teams and individuals.  
 - Secure auth with both JWT tokens and OAuth sign-in options.  
@@ -119,7 +132,7 @@ OpenBox is designed to be a simple, extensible platform for teams, students, and
 
 ---
 
-## 🚀 9. Future Enhancements
+## 🚀 10. Future Enhancements
 
 - Real-time collaboration (operational transforms or CRDT) for simultaneous editing.  
 - Integrations: CI runners, code linters, and webhooks.  
@@ -134,9 +147,9 @@ OpenBox is designed to be a simple, extensible platform for teams, students, and
 
 | Name | Role | Responsibilities |
 |------|------|------------------|
-| **Yuvraj** | Backend Developer | Authentication systems |
+| **Yuvraj** | Backend Developer | Handles Authentication Systems |
 | **Sumit** | Backend Developer | Database design & management |
-| **Oashe** | Backend Developer | AI integrations |
+| **Oashe** | Backend Developer | AI integrations & APIs Design |
 | **Nihal** | Frontend Developer | User interface & experience |
 
 ---
