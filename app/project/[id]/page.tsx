@@ -9,7 +9,16 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FileText, Folder, Code, Plus, Trash2, ExternalLink, BarChart3, Globe } from "lucide-react"
+import {
+  FileText,
+  Folder,
+  Code,
+  Plus,
+  Trash2,
+  ExternalLink,
+  BarChart3,
+  Globe,
+} from "lucide-react";
 import { mockFiles, mockChangeRecords, mockCollaborators } from "@/lib/mock-data"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"

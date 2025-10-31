@@ -11,8 +11,8 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "OpenBox - Project Manager",
   description: "Manage your projects. The Open Way.",
-  generator: "v0.app",
-}
+  generator: "Openbox",
+};
 
 export default function RootLayout({
   children,
