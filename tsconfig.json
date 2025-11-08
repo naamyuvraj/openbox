@@ -34,7 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
-  ],
+, "backend/models/User.js", "backend/oauth/google.js", "backend/routes/auth.js", "backend/db.js"  ],
   "exclude": [
     "node_modules"
   ]
