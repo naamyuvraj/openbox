@@ -7,6 +7,7 @@ const router = express.Router();
 router.post(
   "/register",
   (req, res, next) => {
+    console.log("📩 Register route hit with body:", req.body);
     next();
   },
   register

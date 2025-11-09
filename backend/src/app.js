@@ -1,26 +1,32 @@
+// app.js
 import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.route.js";
-const PORT = process.env.PORT || 5000;
+import projectRoutes from "./routes/project.route.js";
 
 dotenv.config();
+
 const app = express();
+
 app.use(express.json());
 
-connectDB(); 
-
-// /register, /login
-app.use("/api/auth", authRoutes);
-
-
-
-app.get("/", (req, res) => {
-  res.send("Server chal rha hain!");
+// Database connection
+connectDB();
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.url}`);
+  next();
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
+
+// Routes
+app.use("/api/auth", authRoutes);
+
+app.use("/projects", projectRoutes);
+
+// Default route
+app.get("/", (req, res) => {
+  res.send("🚀 Server chal rha hain!");
 });
 
 export default app;

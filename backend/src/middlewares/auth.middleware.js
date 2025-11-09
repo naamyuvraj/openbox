@@ -13,23 +13,30 @@ if (!JWT_SECRET) {
 
 export const authenticateToken = (req, res, next) => {
   try {
-    const header = req.headers.authorization || req.headers.Authorization;
-    const token = header.split(" ")[1];
+    const header = req.headers.authorization;
 
     if (!header?.startsWith("Bearer ")) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized access: No token provided" });
+      console.log("❌ No Bearer token in header");
+      return res.status(401).json({ message: "Unauthorized: Token missing" });
     }
+
+    const token = header.split(" ")[1];
+    console.log("🧩 Token received:", token.slice(0, 20) + "...");
 
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
-        return res.status(403).json({ message: err.message });
+        console.error("❌ JWT verification failed:", err.message);
+        return res.status(403).json({ message: "Invalid or expired token" });
       }
+      console.log("✅ Token verified:", decoded);
       req.user = decoded;
       next();
     });
   } catch (err) {
-    res.status(500).json({ message: "server error" });
+    console.error("🔥 Middleware error:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
