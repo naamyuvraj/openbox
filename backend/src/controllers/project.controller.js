@@ -160,3 +160,46 @@ export const addCollaborator = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+// =========================
+// remove Collaborator
+// =========================
+
+export const removeCollaborator = async (req, res) => {
+  try {
+    const project_id = req.params.id;
+    const { collaborator_id } = req.body;
+
+    const project = await Project.findById(project_id);
+
+    if (!project){
+      return res.status(404).json({message:"Project nhi hain"})
+    }
+
+    if (project.owner_id.toString() !== req.user.id) {
+      return res.status(403).json({ Error: "Access Denied" });
+    }
+
+    if (!project.collaborators.includes(collaborator_id)) {
+      return res.status(400).json({ Error: "User is not a collaborator" });
+    }
+
+    project.collaborators = project.collaborators.filter(
+      (id) => id.toString() !== collaborator_id
+    );
+
+    await project.save();
+
+    return res.status(200).json({
+      message: "Collaborator removed",
+      project,
+    });
+
+
+
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+}

@@ -6,6 +6,7 @@ import {
     getProject,
     getAllProjects,
     addCollaborator,
+    removeCollaborator,
 } from "../controllers/project.controller.js";
 
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -31,5 +32,8 @@ router.get("/", getAllProjects);
 
 // add collaborator to project
 router.post("/collaborators/:id", addCollaborator);
+
+//remove collaborator 
+router.delete("/collaborators/:id", removeCollaborator);
 
 export default router;

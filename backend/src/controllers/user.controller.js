@@ -8,7 +8,7 @@ import User from '../models/user.model.js';
 export const getProfile = async(req,res) => {
     try {
         const userId = req.user.id;
-        const user = await User.findOne({user_id : userId}).select('-password -_id -__v -googleId');
+        const user = await User.findById(req.user.id).select('-password -_id -__v -googleId');
         if(!user){
             return res.status(404).json({message: "User not found"});
         }
@@ -29,7 +29,7 @@ export const updateBioAvatar = async(req,res) => {
         const userId = req.user.id;
         const {bio, avatarUrl} = req.body;
 
-        const user = await User.findOne({user_id : userId});
+        const user = await User.findById(req.user.id);
         if(!user){
             return res.status(404).json({message: "User not found"});
         }
