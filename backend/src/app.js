@@ -14,7 +14,7 @@ app.use(express.json());
 // Database connection
 connectDB();
 app.use((req, res, next) => {
-  console.log(`📨 ${req.method} ${req.url}`);
+  console.log(`${req.method} ${req.url}`);
   next();
 });
 
@@ -26,7 +26,7 @@ app.use("/projects", projectRoutes);
 
 // Default route
 app.get("/", (req, res) => {
-  res.send("🚀 Server chal rha hain!");
+  res.send("Server chal rha hain!");
 });
 
 export default app;

@@ -30,6 +30,6 @@ router.get("/:id", getProject);
 router.get("/", getAllProjects);
 
 // add collaborator to project
-router.post("/:id", addCollaborator);
+router.post("/collaborators/:id", addCollaborator);
 
 export default router;
