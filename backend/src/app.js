@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.route.js";
 import projectRoutes from "./routes/project.route.js";
+import profileRoutes from "./routes/Profile.route.js";
 
 dotenv.config();
 
@@ -23,6 +24,8 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRoutes);
 
 app.use("/projects", projectRoutes);
+
+app.use("/user", profileRoutes);
 
 // Default route
 app.get("/", (req, res) => {
