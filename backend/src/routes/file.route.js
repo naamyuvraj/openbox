@@ -5,18 +5,19 @@ import {
   getFileHistory,
 } from "../controllers/file.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
-import { upload } from "../middlewares/multer.middleware.js"; // from above
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = express.Router();
 
 router.use(authenticateToken);
 
+// Upload a ZIP folder → creates initial commit automatically
 router.post("/upload", upload.single("folder"), uploadFolder);
 
-// get file by itz id
+// Get a single file by ID (latest content)
 router.get("/:id", getFile);
 
-// Get history
+// Get the commit history of a file
 router.get("/:id/history", getFileHistory);
 
 export default router;

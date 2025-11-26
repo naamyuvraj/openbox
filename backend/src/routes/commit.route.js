@@ -8,13 +8,15 @@ import { authenticateToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// read commit by its id
+router.use(authenticateToken);
+
+// Create a new commit (file changes)
+router.post("/", commitChanges);
+
+// Get a single commit by ID
 router.get("/:id", getCommit);
 
-// read all cmmmits
+// Get all commits of a repository
 router.get("/repo/:repoId", getAllCommits);
-
-// create new commit 
-router.post("/", authenticateToken, commitChanges);
 
 export default router;

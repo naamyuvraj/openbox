@@ -2,7 +2,9 @@ import File from "../models/file.model.js";
 import Commit from "../models/commit.model.js";
 import AdmZip from "adm-zip";
 
-// uplading using zip
+// ==============================
+// Upload initial folder (ZIP)
+// ==============================
 export const uploadFolder = async (req, res) => {
   try {
     const { repo_id } = req.body;
@@ -12,17 +14,17 @@ export const uploadFolder = async (req, res) => {
       return res.status(400).json({ message: "No ZIP file uploaded" });
     }
 
-    const zipBuffer = req.file.buffer;
-    const zip = new AdmZip(zipBuffer);
+    const zip = new AdmZip(req.file.buffer);
     const zipEntries = zip.getEntries();
 
-    if (zipEntries.length === 0) {
+    if (!zipEntries.length) {
       return res.status(400).json({ message: "ZIP file is empty" });
     }
 
     const fileDocs = [];
     const commitFiles = [];
 
+    // Extract files from ZIP and create File documents
     for (const entry of zipEntries) {
       if (entry.isDirectory) continue;
 
@@ -51,8 +53,8 @@ export const uploadFolder = async (req, res) => {
       });
     }
 
-    //  initial commit
-    const newCommit = new Commit({
+    // Create initial commit for all files
+    const initialCommit = new Commit({
       repo_id,
       user_id,
       commit_title: "Initial commit",
@@ -60,21 +62,21 @@ export const uploadFolder = async (req, res) => {
       files: commitFiles,
     });
 
-    await newCommit.save();
+    await initialCommit.save();
 
-    // poitns to that commit 
+    // Link all files to this commit
     for (const file of fileDocs) {
-      file.commit_id = newCommit._id;
+      file.commit_id = initialCommit._id;
       await file.save();
     }
 
     return res.status(201).json({
       message: "Folder uploaded and initial commit created",
       files: fileDocs,
-      commit: newCommit,
+      commit: initialCommit,
     });
   } catch (err) {
-    console.error(err);
+    console.error("[UPLOAD FOLDER ERROR]", err);
     return res.status(500).json({ error: err.message });
   }
 };
