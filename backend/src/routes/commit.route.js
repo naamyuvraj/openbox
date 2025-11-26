@@ -5,18 +5,19 @@ import {
   getAllCommits,
 } from "../controllers/commit.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = express.Router();
 
 router.use(authenticateToken);
 
-// Create a new commit (file changes)
-router.post("/", commitChanges);
+// Initial ZIP upload or manual changes → commit
+router.post("/", upload.single("folder"), commitChanges);
 
-// Get a single commit by ID
+// Get a single commit
 router.get("/:id", getCommit);
 
-// Get all commits of a repository
+// Get all commits of a repo
 router.get("/repo/:repoId", getAllCommits);
 
 export default router;

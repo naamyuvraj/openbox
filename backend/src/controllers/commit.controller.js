@@ -22,6 +22,7 @@ export const commitChanges = async (req, res) => {
 
       for (const entry of zipEntries) {
         if (entry.isDirectory) continue;
+        if (entry.entryName.startsWith("__MACOSX/") || entry.name.startsWith("._")) continue;
 
         const content = entry.getData().toString("utf-8");
         const file_path = entry.entryName;
@@ -148,3 +149,5 @@ export const getAllCommits = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+
