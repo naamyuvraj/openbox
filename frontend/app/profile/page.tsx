@@ -1,12 +1,13 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { AppLayout } from "@/components/layout/app-layout"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import type React from "react";
+import { useState, useEffect } from "react";
+
+import { AppLayout } from "@/components/layout/app-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -15,75 +16,101 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/modal"
-import { Label } from "@/components/ui/label"
-import { Edit, Lock, Upload, Save, Plus, Trash2, Mail, User } from "lucide-react"
+} from "@/components/ui/modal";
+import { Label } from "@/components/ui/label";
+import { Edit, Lock, Upload, Save, Plus, Trash2, Mail, User } from "lucide-react";
+
+// api call
+import { getUserProfile, updateUserProfile } from "../service/app";
 
 interface UserProfile {
-  name: string
-  email: string
-  bio: string
-  avatar: string
-  totalCommits: number
-  totalChanges: number
+  name: string;
+  email: string;
+  bio: string;
+  avatar: string;
+  totalCommits: number;
+  totalChanges: number;
 }
 
 interface Friend {
-  id: string
-  username: string
-  email: string
-  avatar: string
+  id: string;
+  username: string;
+  email: string;
+  avatar: string;
 }
 
 const mockFriends: Friend[] = [
   { id: "1", username: "sarah_chen", email: "sarah@example.com", avatar: "SC" },
   { id: "2", username: "mike_johnson", email: "mike@example.com", avatar: "MJ" },
   { id: "3", username: "alex_rivera", email: "alex@example.com", avatar: "AR" },
-]
+];
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<UserProfile>({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    bio: "Full-stack developer | Open source enthusiast",
-    avatar: "JD",
-    totalCommits: 342,
-    totalChanges: 1250,
-  })
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [friends, setFriends] = useState<Friend[]>(mockFriends)
-  const [isEditingDetails, setIsEditingDetails] = useState(false)
-  const [editedProfile, setEditedProfile] = useState(profile)
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
-  const [isAddingFriend, setIsAddingFriend] = useState(false)
-  const [newFriendUsername, setNewFriendUsername] = useState("")
-  const [newFriendEmail, setNewFriendEmail] = useState("")
+  const [friends, setFriends] = useState<Friend[]>(mockFriends);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isAddingFriend, setIsAddingFriend] = useState(false);
 
-  const handleSaveDetails = () => {
-    setProfile(editedProfile)
-    setIsEditingDetails(false)
-  }
+  const [newFriendUsername, setNewFriendUsername] = useState("");
+  const [newFriendEmail, setNewFriendEmail] = useState("");
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // api call
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getUserProfile();
+        setProfile(data);
+        setEditedProfile(data);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message || "Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
+
+  const handleSaveDetails = async () => {
+    try {
+      if (!editedProfile) return;
+      const updated = await updateUserProfile(editedProfile);
+      setProfile(updated);
+      setIsEditingDetails(false);
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
+  };
 
   const handleChangePassword = () => {
     if (newPassword === confirmPassword && newPassword.length >= 8) {
-      setIsChangingPassword(false)
-      setNewPassword("")
-      setConfirmPassword("")
+      setIsChangingPassword(false);
+      setNewPassword("");
+      setConfirmPassword("");
     }
-  }
+  };
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (event) => {
-        setProfile({ ...profile, avatar: (event.target?.result as string) || "JD" })
-      }
-      reader.readAsDataURL(file)
+        setProfile((prev) =>
+          prev ? { ...prev, avatar: (event.target?.result as string) || "JD" } : prev
+        );
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleAddFriend = () => {
     if (newFriendUsername && newFriendEmail) {
@@ -92,17 +119,21 @@ export default function ProfilePage() {
         username: newFriendUsername,
         email: newFriendEmail,
         avatar: newFriendUsername.substring(0, 2).toUpperCase(),
-      }
-      setFriends([...friends, newFriend])
-      setNewFriendUsername("")
-      setNewFriendEmail("")
-      setIsAddingFriend(false)
+      };
+      setFriends([...friends, newFriend]);
+      setNewFriendUsername("");
+      setNewFriendEmail("");
+      setIsAddingFriend(false);
     }
-  }
+  };
 
   const handleRemoveFriend = (id: string) => {
-    setFriends(friends.filter((f) => f.id !== id))
-  }
+    setFriends(friends.filter((f) => f.id !== id));
+  };
+
+  if (loading) return <p className="p-8">Loading profile...</p>;
+  if (error) return <p className="p-8 text-red-500">{error}</p>;
+  if (!profile) return null;
 
   return (
     <AppLayout>
@@ -112,6 +143,7 @@ export default function ProfilePage() {
           <Card className="border-2 mb-8">
             <CardHeader className="pb-0">
               <div className="flex flex-col sm:flex-row sm:items-end gap-6">
+
                 {/* Avatar with Upload */}
                 <div className="relative">
                   <Avatar className="w-24 h-24 border-2 border-foreground">
@@ -127,6 +159,7 @@ export default function ProfilePage() {
                       </AvatarFallback>
                     )}
                   </Avatar>
+
                   <label className="absolute bottom-0 right-0 bg-foreground text-background p-2 rounded-full cursor-pointer hover:bg-muted-foreground transition">
                     <Upload className="w-4 h-4" />
                     <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
@@ -147,7 +180,9 @@ export default function ProfilePage() {
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <Card className="border-2">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">Total Commits</CardTitle>
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
+                  Total Commits
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-4xl font-black">{profile.totalCommits}</p>
@@ -157,7 +192,9 @@ export default function ProfilePage() {
 
             <Card className="border-2">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">Total Changes</CardTitle>
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
+                  Total Changes
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-4xl font-black">{profile.totalChanges}</p>
@@ -168,6 +205,7 @@ export default function ProfilePage() {
 
           {/* Account Settings */}
           <div className="space-y-6">
+
             {/* Edit Details */}
             <Card className="border-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -175,64 +213,74 @@ export default function ProfilePage() {
                 <Dialog open={isEditingDetails} onOpenChange={setIsEditingDetails}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                      <Edit className="w-4 h-4" />
-                      Edit
+                      <Edit className="w-4 h-4" /> Edit
                     </Button>
                   </DialogTrigger>
+
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Edit Profile Details</DialogTitle>
                       <DialogDescription>Update your personal information</DialogDescription>
                     </DialogHeader>
+
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
                         <Input
                           id="name"
-                          value={editedProfile.name}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                          value={editedProfile?.name || ""}
+                          onChange={(e) =>
+                            editedProfile && setEditedProfile({ ...editedProfile, name: e.target.value })
+                          }
                         />
                       </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <Input
                           id="email"
                           type="email"
-                          value={editedProfile.email}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                          value={editedProfile?.email || ""}
+                          onChange={(e) =>
+                            editedProfile && setEditedProfile({ ...editedProfile, email: e.target.value })
+                          }
                         />
                       </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="bio">Bio</Label>
                         <Input
                           id="bio"
                           placeholder="Tell us about yourself"
-                          value={editedProfile.bio}
-                          onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
+                          value={editedProfile?.bio || ""}
+                          onChange={(e) =>
+                            editedProfile && setEditedProfile({ ...editedProfile, bio: e.target.value })
+                          }
                         />
                       </div>
                     </div>
+
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsEditingDetails(false)}>
-                        Cancel
-                      </Button>
+                      <Button variant="outline" onClick={() => setIsEditingDetails(false)}>Cancel</Button>
                       <Button onClick={handleSaveDetails}>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save
+                        <Save className="w-4 h-4 mr-2" /> Save
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
+
               <CardContent className="space-y-3 text-sm">
                 <div>
                   <p className="text-muted-foreground">Name</p>
                   <p className="font-medium">{profile.name}</p>
                 </div>
+
                 <div>
                   <p className="text-muted-foreground">Email</p>
                   <p className="font-medium">{profile.email}</p>
                 </div>
+
                 <div>
                   <p className="text-muted-foreground">Bio</p>
                   <p className="font-medium">{profile.bio}</p>
@@ -247,20 +295,22 @@ export default function ProfilePage() {
                 <Dialog open={isChangingPassword} onOpenChange={setIsChangingPassword}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                      <Lock className="w-4 h-4" />
-                      Change Password
+                      <Lock className="w-4 h-4" /> Change Password
                     </Button>
                   </DialogTrigger>
+
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Change Password</DialogTitle>
                       <DialogDescription>Enter your new password</DialogDescription>
                     </DialogHeader>
+
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label htmlFor="current-password">Current Password</Label>
                         <Input id="current-password" type="password" placeholder="••••••••" />
                       </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="new-password">New Password</Label>
                         <Input
@@ -271,6 +321,7 @@ export default function ProfilePage() {
                           onChange={(e) => setNewPassword(e.target.value)}
                         />
                       </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">Confirm Password</Label>
                         <Input
@@ -281,53 +332,53 @@ export default function ProfilePage() {
                           onChange={(e) => setConfirmPassword(e.target.value)}
                         />
                       </div>
+
                       {newPassword && confirmPassword && newPassword !== confirmPassword && (
                         <p className="text-sm text-red-600">Passwords do not match</p>
                       )}
+
                       {newPassword && newPassword.length < 8 && (
                         <p className="text-sm text-yellow-600">Password must be at least 8 characters</p>
                       )}
                     </div>
+
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsChangingPassword(false)}>
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleChangePassword}
-                        disabled={newPassword !== confirmPassword || newPassword.length < 8}
-                      >
+                      <Button variant="outline" onClick={() => setIsChangingPassword(false)}>Cancel</Button>
+                      <Button onClick={handleChangePassword} disabled={newPassword !== confirmPassword || newPassword.length < 8}>
                         Update Password
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
+
               <CardContent className="text-sm">
                 <p className="text-muted-foreground">Last changed 3 months ago</p>
               </CardContent>
             </Card>
 
-            {/* Friends & Collaborators */}
+            {/* Friends */}
             <Card className="border-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle>Friends & Collaborators</CardTitle>
+
                 <Dialog open={isAddingFriend} onOpenChange={setIsAddingFriend}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                      <Plus className="w-4 h-4" />
-                      Add Friend
+                      <Plus className="w-4 h-4" /> Add Friend
                     </Button>
                   </DialogTrigger>
+
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Add Friend</DialogTitle>
                       <DialogDescription>Invite a friend for collaboration</DialogDescription>
                     </DialogHeader>
+
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label htmlFor="username" className="flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          Username
+                          <User className="w-4 h-4" /> Username
                         </Label>
                         <Input
                           id="username"
@@ -336,10 +387,10 @@ export default function ProfilePage() {
                           onChange={(e) => setNewFriendUsername(e.target.value)}
                         />
                       </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="friend-email" className="flex items-center gap-2">
-                          <Mail className="w-4 h-4" />
-                          Email
+                          <Mail className="w-4 h-4" /> Email
                         </Label>
                         <Input
                           id="friend-email"
@@ -350,15 +401,15 @@ export default function ProfilePage() {
                         />
                       </div>
                     </div>
+
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddingFriend(false)}>
-                        Cancel
-                      </Button>
+                      <Button variant="outline" onClick={() => setIsAddingFriend(false)}>Cancel</Button>
                       <Button onClick={handleAddFriend}>Add Friend</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
+
               <CardContent className="space-y-3">
                 {friends.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No friends added yet</p>
@@ -374,11 +425,13 @@ export default function ProfilePage() {
                             {friend.avatar}
                           </AvatarFallback>
                         </Avatar>
+
                         <div className="text-sm">
                           <p className="font-semibold">{friend.username}</p>
                           <p className="text-xs text-muted-foreground">{friend.email}</p>
                         </div>
                       </div>
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -392,9 +445,10 @@ export default function ProfilePage() {
                 )}
               </CardContent>
             </Card>
+
           </div>
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }
