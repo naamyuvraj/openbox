@@ -7,6 +7,8 @@ import {
   getUserProjects,
   getProjectById,
   addCollaborator,
+  getProjectDetails,
+  updateProjectDescription,
 } from "../controllers/project.controller.js";
 
 import {
@@ -29,7 +31,12 @@ router.post("/", createProject);
 // -------------------------------
 // UPLOAD ZIP → CREATE PROJECT + INITIAL COMMIT
 // -------------------------------
-router.post("/upload", upload.single("projectZip"), commitChangesFromZip);
+router.post(
+  "/upload",
+  upload.single("projectZip"),
+  authenticateToken,
+  commitChangesFromZip
+);
 
 // -------------------------------
 // GET USER PROJECTS
@@ -40,6 +47,10 @@ router.get("/", getUserProjects);
 // GET SINGLE PROJECT
 // -------------------------------
 router.get("/:id", getProjectById);
+router.get("/:id/details", authenticateToken, getProjectDetails);
+router.patch("/:id/description", updateProjectDescription);
+
+
 
 // -------------------------------
 // ADD COLLABORATOR

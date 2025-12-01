@@ -264,14 +264,23 @@ export const commitChangesFromZip = async (req, res) => {
     }
 
     // Project creation name
-    const projectName = zipFile.originalname.replace(/\.zip$/i, "");
+// Get project name from form-data OR fallback to zip name
+let projectName = req.body.project_name;
+
+if (!projectName || projectName.trim().length === 0) {
+  projectName = zipFile.originalname.replace(/\.zip$/i, "");
+}
+
+projectName = projectName.trim();
+
+console.log("PROJECT NAME RECEIVED:", projectName); // debug
 
     // Create project
-    const project = new Project({
-      name: projectName,
-      description: "Imported ZIP project",
-      user_id,
-    });
+const project = new Project({
+  name: projectName,
+  description: req.body.description || "Imported project",
+  user_id: req.user.id,
+});
 
     await project.save();
 

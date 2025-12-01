@@ -37,6 +37,7 @@ interface ProjectItem {
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
+const [projectName, setProjectName] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<
@@ -46,17 +47,43 @@ export default function ProjectsPage() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [folderFiles, setFolderFiles] = useState<FileList | null>(null);
 
+  // ----------------------------
+  // FETCH USER PROJECTS
+  // ----------------------------
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/projects");
-        const data = await res.json();
-        setProjects(data.projects);
+        const BACKEND =
+          process.env.NEXT_PUBLIC_BACKEND || "http://localhost:5170";
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(`${BACKEND}/projects`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const text = await res.text();
+        let data: any = {};
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.error("Invalid JSON returned:", text);
+        }
+
+        if (res.ok) {
+          setProjects(data.projects || []);
+        } else {
+          console.error("Fetch error:", data);
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Error loading projects:", err);
       }
+
       setLoading(false);
     }
+
     load();
   }, []);
 
@@ -70,86 +97,80 @@ export default function ProjectsPage() {
   // ----------------------------
   // ZIP + UPLOAD PROJECT
   // ----------------------------
-  // inside your ProjectsPage component
-async function handleUploadProject() {
-  if (!folderFiles || folderFiles.length === 0) return;
+  async function handleUploadProject() {
+    if (!folderFiles || folderFiles.length === 0) return;
 
-  // 1️⃣ Zip the folder
-  const zip = new JSZip();
-  for (const file of Array.from(folderFiles)) {
-    const path =
-      (file as any).webkitRelativePath ||
-      (file as any).relativePath ||
-      file.name;
+    const zip = new JSZip();
 
-    zip.file(path, file);
-  }
+    for (const file of Array.from(folderFiles)) {
+      const path =
+        (file as any).webkitRelativePath ||
+        (file as any).relativePath ||
+        file.name;
 
-  const zipBlob = await zip.generateAsync({ type: "blob" });
+      zip.file(path, file);
+    }
 
-  const sizeBytes = zipBlob.size;
-  const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(2);
-  console.log("ZIP size:", sizeBytes, "bytes (~", sizeMB, "MB )");
+    const zipBlob = await zip.generateAsync({ type: "blob" });
 
-  if (sizeBytes > 50 * 1024 * 1024) {
-    alert(
-      `ZIP is ${sizeMB} MB — larger than 50 MB. Consider zipping fewer files or using S3 upload.`
-    );
-    return;
-  }
+    const sizeBytes = zipBlob.size;
+    const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(2);
+    console.log("ZIP size:", sizeBytes, "bytes (~", sizeMB, "MB )");
 
-  // 2️⃣ Prepare FormData
-  const formData = new FormData();
-  formData.append("projectZip", zipBlob, "project.zip");
+    if (sizeBytes > 50 * 1024 * 1024) {
+      alert(
+        `ZIP is ${sizeMB} MB — larger than 50 MB. Consider zipping fewer files or using S3 upload.`
+      );
+      return;
+    }
 
-  // 3️⃣ Get backend URL + JWT Token
-  const BACKEND = process.env.NEXT_PUBLIC_BACKEND || "http://localhost:5170";
+    const formData = new FormData();
+    formData.append("projectZip", zipBlob, "project.zip");
+    formData.append("project_name", projectName);
 
-  // Token from localStorage (YOUR backend requires Bearer token)
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("You are not logged in. No token found.");
-    return;
-  }
 
-  try {
-    // 4️⃣ Call backend
-    const res = await fetch(`${BACKEND}/projects/upload`, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Authorization: `Bearer ${token}`, // REQUIRED FOR YOUR BACKEND
-      },
-    });
+    const BACKEND = process.env.NEXT_PUBLIC_BACKEND || "http://localhost:5170";
+    const token = localStorage.getItem("token");
 
-    // 5️⃣ If backend responded with HTML error page → avoid JSON parsing crash
-    const text = await res.text();
-    let data: any = {};
+    if (!token) {
+      alert("You are not logged in. No token found.");
+      return;
+    }
+
     try {
-      data = JSON.parse(text);
-    } catch {
-      console.error("Server returned non-JSON:", text);
-      alert("Upload failed: Server returned an invalid response");
-      return;
+      const res = await fetch(`${BACKEND}/projects/upload`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const text = await res.text();
+      let data: any = {};
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("Server returned non-JSON:", text);
+        alert("Upload failed: server error");
+        return;
+      }
+
+      if (res.ok) {
+        console.log("Upload success:", data);
+        setIsCreatingProject(false);
+        window.location.reload();
+        return;
+      }
+
+      console.error("Upload error:", data);
+      alert(data.error || data.message || "Upload failed");
+    } catch (err) {
+      console.error("Upload error", err);
+      alert("Upload failed. Check console.");
     }
-
-    // 6️⃣ Handle success
-    if (res.ok) {
-      console.log("Upload success:", data);
-      setIsCreatingProject(false);
-      window.location.reload();
-      return;
-    }
-
-    // 7️⃣ Handle backend errors
-    console.error("Upload error:", data);
-    alert(data.error || data.message || "Upload failed");
-
-  } catch (err) {
-    console.error("Upload error", err);
-    alert("Upload failed. Check console for details.");
   }
-}
 
   // ----------------------------
   // FILTER PROJECTS
@@ -196,11 +217,33 @@ async function handleUploadProject() {
                   <DialogHeader>
                     <DialogTitle>Upload Project Folder</DialogTitle>
                     <DialogDescription>
-                      Select a full project folder to create a repo.
+                      <div className="space-y-4 py-4">
+                        {/* 🟦 NEW — Project Name Input */}
+                        <div className="space-y-2">
+                          <Label>Project Name</Label>
+                          <Input
+                            type="text"
+                            placeholder="Enter project name"
+                            value={projectName}
+                            onChange={(e) => setProjectName(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Select Folder</Label>
+                          <Input
+                            type="file"
+                            webkitdirectory="true"
+                            directory="true"
+                            multiple
+                            onChange={handleFolderSelect}
+                          />
+                        </div>
+                      </div>
                     </DialogDescription>
                   </DialogHeader>
 
-                  <div className="space-y-4 py-4">
+                  {/* <div className="space-y-4 py-4">
                     <div className="space-y-2">
                       <Label>Select Folder</Label>
                       <Input
@@ -211,7 +254,7 @@ async function handleUploadProject() {
                         onChange={handleFolderSelect}
                       />
                     </div>
-                  </div>
+                  </div> */}
 
                   <DialogFooter>
                     <Button
@@ -304,16 +347,16 @@ async function handleUploadProject() {
                           {project.description || "No description"}
                         </p>
 
-                        {/* Progress bar (static for now) */}
+                        {/* Progress */}
                         <div className="space-y-2">
                           <div className="flex justify-between text-xs font-semibold text-muted-foreground">
                             <span>Progress</span>
-                            <span>0%</span>
+                            <span>{project.progress ?? 0}%</span>
                           </div>
                           <div className="w-full h-2 bg-muted rounded-full overflow-hidden border border-foreground/10">
                             <div
                               className="h-full bg-foreground transition-smooth"
-                              style={{ width: "0%" }}
+                              style={{ width: `${project.progress ?? 0}%` }}
                             />
                           </div>
                         </div>
