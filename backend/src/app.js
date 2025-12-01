@@ -5,7 +5,7 @@ import session from "express-session";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.route.js";
 import projectRoutes from "./routes/project.route.js";
-import profileRoutes from "./routes/Profile.route.js";
+import profileRoutes from "./routes/profile.route.js";
 import fileRoutes from "./routes/file.route.js";
 import commitRoutes from "./routes/commit.route.js";
 
