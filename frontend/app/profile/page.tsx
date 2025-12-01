@@ -349,7 +349,7 @@ export default function ProfilePage() {
                           try {
                             const token = localStorage.getItem("token"); // your JWT
                             const res = await fetch(
-                              "https://openbox-dashboard.onrender.com/user/change-password",
+                              "https://openbox-r8z3.onrender.com/user/change-password",
                               {
                                 method: "POST",
                                 headers: {

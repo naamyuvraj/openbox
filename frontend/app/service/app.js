@@ -72,27 +72,32 @@ export function googleLogin() {
 export async function getAuthProfile() {
   try {
     const token = getAuthToken();
+    console.log("JWT token:", token);
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
-      method: 'GET',
+    const response = await fetch(`${API_BASE_URL}/user/profile`, {
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
+    console.log("Profile response status:", response.status);
+
     const data = await response.json();
+    console.log("Profile response data:", data);
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to get profile');
+      throw new Error(data.message || "Failed to get profile");
     }
 
-    return data;
+    return data; // { user: { ... } }
   } catch (error) {
-    console.error('Error getting profile:', error);
+    console.error("Error getting profile:", error);
     throw error;
   }
 }
+
 
 export function logout() {
   clearAuthToken();
