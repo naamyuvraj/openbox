@@ -50,11 +50,6 @@ export default function LoginPage() {
       googleLogin()        // redirect to backend OAuth route
       return
     }
-
-    if (provider === "github") {
-      window.location.href = "https://openbox-r8z3.onrender.com/api/auth/github"
-      return
-    }
   }
 
   return (
@@ -101,15 +96,6 @@ export default function LoginPage() {
               >
                 <Mail className="w-4 h-4" />
                 Continue with Google
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full gap-2 bg-transparent"
-                disabled={isLoading}
-                onClick={() => handleOAuth("github")}
-              >
-                <Github className="w-4 h-4" />
-                Continue with GitHub
               </Button>
             </div>
 

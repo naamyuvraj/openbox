@@ -20,14 +20,14 @@ import {
 import { Label } from "@/components/ui/label";
 import { Edit, Lock, Upload, Save, Plus, Trash2, Mail, User } from "lucide-react";
 
-// api call
 import { getUserProfile, updateUserProfile } from "../service/app";
 
+// User Profile Type
 interface UserProfile {
   name: string;
   email: string;
   bio: string;
-  avatar: string;
+  avatarUrl: string;
   totalCommits: number;
   totalChanges: number;
 }
@@ -62,13 +62,30 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // api call
+  // Load Profile
   useEffect(() => {
     async function load() {
       try {
-        const data = await getUserProfile();
-        setProfile(data);
-        setEditedProfile(data);
+        const res = await getUserProfile();
+        console.log("🔥 Profile API:", res);
+
+        if (!res || !res.user) {
+          throw new Error("Invalid profile response");
+        }
+
+        const u = res.user;
+
+        const normalized: UserProfile = {
+          name: u.name || "Unknown User",
+          email: u.email || "",
+          bio: u.bio || "",
+          avatarUrl: u.avatarUrl || "",
+          totalCommits: u.totalCommits || 0,
+          totalChanges: u.totalChanges || 0,
+        };
+
+        setProfile(normalized);
+        setEditedProfile(normalized);
         setError(null);
       } catch (err: any) {
         setError(err.message || "Failed to load profile");
@@ -80,11 +97,32 @@ export default function ProfilePage() {
     load();
   }, []);
 
+  // Save Profile
   const handleSaveDetails = async () => {
+    if (!editedProfile) return;
+
     try {
-      if (!editedProfile) return;
-      const updated = await updateUserProfile(editedProfile);
-      setProfile(updated);
+      const payload = {
+        name: editedProfile.name,
+        email: editedProfile.email,
+        bio: editedProfile.bio,
+        avatarUrl: editedProfile.avatarUrl,
+      };
+
+      const updated = await updateUserProfile(payload);
+
+      if (!updated.user) return;
+
+      const u = updated.user;
+
+      setProfile((prev) => ({
+        ...prev!,
+        name: u.name || prev?.name || "",
+        email: u.email || prev?.email || "",
+        bio: u.bio || prev?.bio || "",
+        avatarUrl: u.avatarUrl || prev?.avatarUrl || "",
+      }));
+
       setIsEditingDetails(false);
     } catch (err) {
       console.error("Update failed:", err);
@@ -99,19 +137,21 @@ export default function ProfilePage() {
     }
   };
 
+  // Upload Avatar
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setProfile((prev) =>
-          prev ? { ...prev, avatar: (event.target?.result as string) || "JD" } : prev
-        );
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setEditedProfile((prev) => (prev ? { ...prev, avatarUrl: base64 } : prev));
+    };
+
+    reader.readAsDataURL(file);
   };
 
+  // Friends features
   const handleAddFriend = () => {
     if (newFriendUsername && newFriendEmail) {
       const newFriend: Friend = {
@@ -135,38 +175,39 @@ export default function ProfilePage() {
   if (error) return <p className="p-8 text-red-500">{error}</p>;
   if (!profile) return null;
 
+  const fallbackInitials =
+    profile?.name?.substring(0, 2)?.toUpperCase() || "US";
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
         <div className="container-safe max-w-4xl mx-auto py-8">
+
           {/* Profile Header */}
           <Card className="border-2 mb-8">
             <CardHeader className="pb-0">
               <div className="flex flex-col sm:flex-row sm:items-end gap-6">
-
-                {/* Avatar with Upload */}
                 <div className="relative">
                   <Avatar className="w-24 h-24 border-2 border-foreground">
-                    {typeof profile.avatar === "string" && profile.avatar.length > 2 ? (
+                    {profile.avatarUrl ? (
                       <img
-                        src={profile.avatar || "/placeholder.svg"}
+                        src={profile.avatarUrl}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <AvatarFallback className="bg-foreground text-background text-2xl font-black">
-                        {profile.avatar}
+                        {fallbackInitials}
                       </AvatarFallback>
                     )}
                   </Avatar>
 
-                  <label className="absolute bottom-0 right-0 bg-foreground text-background p-2 rounded-full cursor-pointer hover:bg-muted-foreground transition">
+                  <label className="absolute bottom-0 right-0 bg-foreground text-background p-2 rounded-full cursor-pointer">
                     <Upload className="w-4 h-4" />
                     <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
                   </label>
                 </div>
 
-                {/* User Info */}
                 <div className="flex-1">
                   <h1 className="text-3xl font-black mb-2">{profile.name}</h1>
                   <p className="text-muted-foreground text-sm">{profile.email}</p>
@@ -176,43 +217,36 @@ export default function ProfilePage() {
             </CardHeader>
           </Card>
 
-          {/* Stats Grid */}
+          {/* Stats */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <Card className="border-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">
-                  Total Commits
-                </CardTitle>
+              <CardHeader>
+                <CardTitle>Total Commits</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-4xl font-black">{profile.totalCommits}</p>
-                <p className="text-xs text-muted-foreground mt-2">Contributions to projects</p>
               </CardContent>
             </Card>
 
             <Card className="border-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">
-                  Total Changes
-                </CardTitle>
+              <CardHeader>
+                <CardTitle>Total Changes</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-4xl font-black">{profile.totalChanges}</p>
-                <p className="text-xs text-muted-foreground mt-2">Files modified/created</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Account Settings */}
+          {/* Profile Edit Section */}
           <div className="space-y-6">
-
-            {/* Edit Details */}
             <Card className="border-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Profile Details</CardTitle>
+
                 <Dialog open={isEditingDetails} onOpenChange={setIsEditingDetails}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4" /> Edit
                     </Button>
                   </DialogTrigger>
@@ -220,48 +254,50 @@ export default function ProfilePage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Edit Profile Details</DialogTitle>
-                      <DialogDescription>Update your personal information</DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
+                      <div>
+                        <Label>Name</Label>
                         <Input
-                          id="name"
                           value={editedProfile?.name || ""}
                           onChange={(e) =>
-                            editedProfile && setEditedProfile({ ...editedProfile, name: e.target.value })
+                            setEditedProfile((prev) =>
+                              prev ? { ...prev, name: e.target.value } : prev
+                            )
                           }
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                      <div>
+                        <Label>Email</Label>
                         <Input
-                          id="email"
-                          type="email"
                           value={editedProfile?.email || ""}
                           onChange={(e) =>
-                            editedProfile && setEditedProfile({ ...editedProfile, email: e.target.value })
+                            setEditedProfile((prev) =>
+                              prev ? { ...prev, email: e.target.value } : prev
+                            )
                           }
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="bio">Bio</Label>
+                      <div>
+                        <Label>Bio</Label>
                         <Input
-                          id="bio"
-                          placeholder="Tell us about yourself"
                           value={editedProfile?.bio || ""}
                           onChange={(e) =>
-                            editedProfile && setEditedProfile({ ...editedProfile, bio: e.target.value })
+                            setEditedProfile((prev) =>
+                              prev ? { ...prev, bio: e.target.value } : prev
+                            )
                           }
                         />
                       </div>
                     </div>
 
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsEditingDetails(false)}>Cancel</Button>
+                      <Button variant="outline" onClick={() => setIsEditingDetails(false)}>
+                        Cancel
+                      </Button>
                       <Button onClick={handleSaveDetails}>
                         <Save className="w-4 h-4 mr-2" /> Save
                       </Button>
@@ -288,13 +324,13 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Change Password */}
+            {/* Security Section */}
             <Card className="border-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Security</CardTitle>
                 <Dialog open={isChangingPassword} onOpenChange={setIsChangingPassword}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Button variant="outline" size="sm">
                       <Lock className="w-4 h-4" /> Change Password
                     </Button>
                   </DialogTrigger>
@@ -302,32 +338,22 @@ export default function ProfilePage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Change Password</DialogTitle>
-                      <DialogDescription>Enter your new password</DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="current-password">Current Password</Label>
-                        <Input id="current-password" type="password" placeholder="••••••••" />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="new-password">New Password</Label>
+                      <div>
+                        <Label>New Password</Label>
                         <Input
-                          id="new-password"
                           type="password"
-                          placeholder="••••••••"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                      <div>
+                        <Label>Confirm Password</Label>
                         <Input
-                          id="confirm-password"
                           type="password"
-                          placeholder="••••••••"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                         />
@@ -336,15 +362,16 @@ export default function ProfilePage() {
                       {newPassword && confirmPassword && newPassword !== confirmPassword && (
                         <p className="text-sm text-red-600">Passwords do not match</p>
                       )}
-
-                      {newPassword && newPassword.length < 8 && (
-                        <p className="text-sm text-yellow-600">Password must be at least 8 characters</p>
-                      )}
                     </div>
 
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsChangingPassword(false)}>Cancel</Button>
-                      <Button onClick={handleChangePassword} disabled={newPassword !== confirmPassword || newPassword.length < 8}>
+                      <Button variant="outline" onClick={() => setIsChangingPassword(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleChangePassword}
+                        disabled={newPassword !== confirmPassword || newPassword.length < 8}
+                      >
                         Update Password
                       </Button>
                     </DialogFooter>
@@ -352,19 +379,19 @@ export default function ProfilePage() {
                 </Dialog>
               </CardHeader>
 
-              <CardContent className="text-sm">
-                <p className="text-muted-foreground">Last changed 3 months ago</p>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Last changed recently</p>
               </CardContent>
             </Card>
 
             {/* Friends */}
             <Card className="border-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Friends & Collaborators</CardTitle>
 
                 <Dialog open={isAddingFriend} onOpenChange={setIsAddingFriend}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Button variant="outline" size="sm">
                       <Plus className="w-4 h-4" /> Add Friend
                     </Button>
                   </DialogTrigger>
@@ -372,30 +399,20 @@ export default function ProfilePage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Add Friend</DialogTitle>
-                      <DialogDescription>Invite a friend for collaboration</DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="username" className="flex items-center gap-2">
-                          <User className="w-4 h-4" /> Username
-                        </Label>
+                      <div>
+                        <Label>Username</Label>
                         <Input
-                          id="username"
-                          placeholder="john_doe"
                           value={newFriendUsername}
                           onChange={(e) => setNewFriendUsername(e.target.value)}
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="friend-email" className="flex items-center gap-2">
-                          <Mail className="w-4 h-4" /> Email
-                        </Label>
+                      <div>
+                        <Label>Email</Label>
                         <Input
-                          id="friend-email"
-                          type="email"
-                          placeholder="john@example.com"
                           value={newFriendEmail}
                           onChange={(e) => setNewFriendEmail(e.target.value)}
                         />
@@ -403,7 +420,9 @@ export default function ProfilePage() {
                     </div>
 
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddingFriend(false)}>Cancel</Button>
+                      <Button variant="outline" onClick={() => setIsAddingFriend(false)}>
+                        Cancel
+                      </Button>
                       <Button onClick={handleAddFriend}>Add Friend</Button>
                     </DialogFooter>
                   </DialogContent>
@@ -412,12 +431,12 @@ export default function ProfilePage() {
 
               <CardContent className="space-y-3">
                 {friends.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No friends added yet</p>
+                  <p>No friends yet</p>
                 ) : (
                   friends.map((friend) => (
                     <div
                       key={friend.id}
-                      className="flex items-center justify-between p-3 border border-border rounded-lg"
+                      className="flex items-center justify-between p-3 border rounded-lg"
                     >
                       <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
@@ -432,12 +451,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveFriend(friend.id)}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => handleRemoveFriend(friend.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -445,7 +459,6 @@ export default function ProfilePage() {
                 )}
               </CardContent>
             </Card>
-
           </div>
         </div>
       </div>
