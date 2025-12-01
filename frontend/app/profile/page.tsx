@@ -339,7 +339,40 @@ export default function ProfilePage() {
                         Cancel
                       </Button>
                       <Button
-                        onClick={handleChangePassword}
+                        onClick={async () => {
+                          if (
+                            newPassword !== confirmPassword ||
+                            newPassword.length < 8
+                          )
+                            return;
+
+                          try {
+                            const token = localStorage.getItem("token"); // your JWT
+                            const res = await fetch(
+                              "https://openbox-dashboard.onrender.com/user/change-password",
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ newPassword }),
+                              }
+                            );
+
+                            const data = await res.json();
+
+                            if (!res.ok)
+                              throw new Error(data.message || "Failed");
+
+                            alert("✅ Password changed successfully!");
+                            setIsChangingPassword(false);
+                            setNewPassword("");
+                            setConfirmPassword("");
+                          } catch (err: any) {
+                            alert(err.message);
+                          }
+                        }}
                         disabled={
                           newPassword !== confirmPassword ||
                           newPassword.length < 8
