@@ -44,6 +44,10 @@ app.use("/user", profileRoutes);
 app.use("/api/files", fileRoutes); // mounted file routes
 app.use("/api/commits", commitRoutes); // mounted commit routes
 
+app.get("/ping", (req, res) => {
+  res.send("pong");
+});
+
 // test endpoint
 app.get("/", (req, res) => {
   res.send("Server chal rha hain!");
