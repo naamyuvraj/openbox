@@ -14,16 +14,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Github, Mail } from "lucide-react";
-import { register } from "../service/app"; 
+
+import { register, login } from "../service/app";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");  
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,12 +33,20 @@ export default function SignupPage() {
     setError("");
 
     try {
-      const result = await register({ name, email, password, username }); 
+      // 1️⃣ Register user
+      await register({ name, username, email, password });
 
-      if (result.token) {
-        localStorage.setItem("token", result.token);
+      // 2️⃣ Auto login after successful signup
+      const loginResult = await login({ email, password });
+
+      // 3️⃣ Save token
+      if (loginResult.token) {
+        localStorage.setItem("token", loginResult.token);
+      } else {
+        throw new Error("No token received");
       }
 
+      // 4️⃣ Redirect
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Signup failed");
@@ -48,7 +57,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-background/95 flex flex-col md:flex-row">
-
       <div className="w-full md:w-1/2 flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-0 shadow-lg md:shadow-none md:border">
           <CardHeader>
@@ -57,13 +65,11 @@ export default function SignupPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-
             {error && (
               <p className="text-red-500 text-sm text-center">{error}</p>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              
               {/* Name */}
               <div className="space-y-2">
                 <Label>Full Name</Label>
@@ -71,6 +77,7 @@ export default function SignupPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={isLoading}
+                  required
                 />
               </div>
 
@@ -78,10 +85,10 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <Label>Username</Label>
                 <Input
-                  placeholder="yourusername"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoading}
+                  required
                 />
               </div>
 
@@ -93,6 +100,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  required
                 />
               </div>
 
@@ -104,6 +112,7 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
+                  required
                 />
               </div>
 
@@ -118,7 +127,6 @@ export default function SignupPage() {
                 Sign in
               </Link>
             </div>
-
           </CardContent>
         </Card>
       </div>
