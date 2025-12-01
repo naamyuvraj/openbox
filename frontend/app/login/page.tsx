@@ -11,25 +11,50 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Github, Mail } from "lucide-react"
 
+// ADD: login + googleLogin import
+import { login, googleLogin } from "../service/app"
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
   const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // FINAL UPDATED LOGIN HANDLER
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setTimeout(() => {
+    setError("")
+
+    try {
+      const result = await login({ email, password })
+
+      if (result.token) {
+        localStorage.setItem("token", result.token)
+      }
+
       router.push("/dashboard")
-    }, 600)
+    } catch (err: any) {
+      setError(err.message || "Login failed")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
+  // UPDATED OAUTH HANDLER
   const handleOAuth = (provider: string) => {
     setIsLoading(true)
-    setTimeout(() => {
-      router.push("/dashboard")
-    }, 600)
+
+    if (provider === "google") {
+      googleLogin()        // redirect to backend OAuth route
+      return
+    }
+
+    if (provider === "github") {
+      window.location.href = "https://openbox-r8z3.onrender.com/api/auth/github"
+      return
+    }
   }
 
   return (
@@ -59,7 +84,13 @@ export default function LoginPage() {
             <CardTitle className="text-2xl">Welcome</CardTitle>
             <CardDescription>Sign in to your OpenBox account</CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-6">
+            {/* ERROR MESSAGE */}
+            {error && (
+              <p className="text-red-500 text-center text-sm">{error}</p>
+            )}
+
             {/* OAuth buttons */}
             <div className="space-y-2">
               <Button
