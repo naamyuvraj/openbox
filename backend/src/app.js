@@ -21,14 +21,16 @@ const app = express();
 // =====================
 app.use(
   cors({
-    origin: ["http://localhost:3000" , "https://openbox-dashboard.vercel.app/" ,"http://localhost:5170" ],
+    origin: [
+      "http://localhost:3000",          
+      "http://localhost:5170",          
+      "https://openbox-dashboard.vercel.app", 
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-app.options("*", cors());
 
 app.use(express.json());
 
@@ -53,9 +55,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// =====================
-// Routes 
-// =====================
+// routes
 app.use("/api/auth", authRoutes);
 app.use("/projects", projectRoutes);
 app.use("/user", profileRoutes);
