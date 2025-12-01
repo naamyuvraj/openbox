@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import passport from "passport";
 import session from "express-session";
 import { connectDB } from "./config/db.js";
-
 import authRoutes from "./routes/auth.route.js";
 import projectRoutes from "./routes/project.route.js";
 import profileRoutes from "./routes/Profile.route.js";

@@ -5,26 +5,42 @@ const ProjectSchema = new mongoose.Schema(
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
 
     name: {
       type: String,
-      required: true
+      required: true,
+      trim: true,
     },
 
     description: {
       type: String,
-      default: ""
+      default: "",
     },
-    collaboratores: [
+    collaborators: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-      }
-    ]
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Project", ProjectSchema);
+const Project = mongoose.model("Project", ProjectSchema);
+
+// Safety: try to drop old slug_1 index once on startup (ignore if it doesn't exist)
+mongoose.connection.once("open", async () => {
+  try {
+    await Project.collection.dropIndex("slug_1");
+    console.log("Dropped legacy index slug_1 from projects collection");
+  } catch (err) {
+    // Ignore "index not found" and namespace errors
+    if (err.code !== 27 && err.codeName !== "IndexNotFound") {
+      console.warn("Could not drop legacy slug_1 index:", err.message);
+    }
+  }
+});
+
+export default Project;

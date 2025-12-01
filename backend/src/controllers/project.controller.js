@@ -30,6 +30,7 @@ export const createProject = async (req, res) => {
   }
 };
 
+
 // ==============================
 // Get all projects of the user
 // ==============================
@@ -76,8 +77,8 @@ export const addCollaborator = async (req, res) => {
     if (!project) return res.status(404).json({ message: "Project not found" });
 
     // avoid duplicates
-    if (!project.collaboratores.includes(collaboratorId)) {
-      project.collaboratores.push(collaboratorId);
+    if (!project.collaborators.includes(collaboratorId)) {
+      project.collaborators.push(collaboratorId);
       await project.save();
     }
 
