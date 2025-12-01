@@ -11,14 +11,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/modal";
 import { Label } from "@/components/ui/label";
-import { Edit, Lock, Upload, Save, Plus, Trash2, Mail, User } from "lucide-react";
+import { Edit, Lock, Upload, Save } from "lucide-react";
 
 import { getUserProfile, updateUserProfile } from "../service/app";
 
@@ -32,32 +31,14 @@ interface UserProfile {
   totalChanges: number;
 }
 
-interface Friend {
-  id: string;
-  username: string;
-  email: string;
-  avatar: string;
-}
-
-const mockFriends: Friend[] = [
-  { id: "1", username: "sarah_chen", email: "sarah@example.com", avatar: "SC" },
-  { id: "2", username: "mike_johnson", email: "mike@example.com", avatar: "MJ" },
-  { id: "3", username: "alex_rivera", email: "alex@example.com", avatar: "AR" },
-];
-
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [friends, setFriends] = useState<Friend[]>(mockFriends);
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [isAddingFriend, setIsAddingFriend] = useState(false);
-
-  const [newFriendUsername, setNewFriendUsername] = useState("");
-  const [newFriendEmail, setNewFriendEmail] = useState("");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -69,12 +50,9 @@ export default function ProfilePage() {
         const res = await getUserProfile();
         console.log("🔥 Profile API:", res);
 
-        if (!res || !res.user) {
-          throw new Error("Invalid profile response");
-        }
+        if (!res || !res.user) throw new Error("Invalid profile response");
 
         const u = res.user;
-
         const normalized: UserProfile = {
           name: u.name || "Unknown User",
           email: u.email || "",
@@ -110,11 +88,9 @@ export default function ProfilePage() {
       };
 
       const updated = await updateUserProfile(payload);
-
       if (!updated.user) return;
 
       const u = updated.user;
-
       setProfile((prev) => ({
         ...prev!,
         name: u.name || prev?.name || "",
@@ -145,44 +121,25 @@ export default function ProfilePage() {
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
-      setEditedProfile((prev) => (prev ? { ...prev, avatarUrl: base64 } : prev));
+      setEditedProfile((prev) =>
+        prev ? { ...prev, avatarUrl: base64 } : prev
+      );
+      setProfile((prev) => (prev ? { ...prev, avatarUrl: base64 } : prev));
     };
-
     reader.readAsDataURL(file);
   };
 
-  // Friends features
-  const handleAddFriend = () => {
-    if (newFriendUsername && newFriendEmail) {
-      const newFriend: Friend = {
-        id: String(friends.length + 1),
-        username: newFriendUsername,
-        email: newFriendEmail,
-        avatar: newFriendUsername.substring(0, 2).toUpperCase(),
-      };
-      setFriends([...friends, newFriend]);
-      setNewFriendUsername("");
-      setNewFriendEmail("");
-      setIsAddingFriend(false);
-    }
-  };
-
-  const handleRemoveFriend = (id: string) => {
-    setFriends(friends.filter((f) => f.id !== id));
-  };
-
+  // Loading & Error States
   if (loading) return <p className="p-8">Loading profile...</p>;
   if (error) return <p className="p-8 text-red-500">{error}</p>;
-  if (!profile) return null;
+  if (!profile || !editedProfile) return null;
 
-  const fallbackInitials =
-    profile?.name?.substring(0, 2)?.toUpperCase() || "US";
+  const fallbackInitials = profile.name.substring(0, 2).toUpperCase();
 
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
         <div className="container-safe max-w-4xl mx-auto py-8">
-
           {/* Profile Header */}
           <Card className="border-2 mb-8">
             <CardHeader className="pb-0">
@@ -204,13 +161,20 @@ export default function ProfilePage() {
 
                   <label className="absolute bottom-0 right-0 bg-foreground text-background p-2 rounded-full cursor-pointer">
                     <Upload className="w-4 h-4" />
-                    <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
                   </label>
                 </div>
 
                 <div className="flex-1">
                   <h1 className="text-3xl font-black mb-2">{profile.name}</h1>
-                  <p className="text-muted-foreground text-sm">{profile.email}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {profile.email}
+                  </p>
                   <p className="text-sm mt-2">{profile.bio}</p>
                 </div>
               </div>
@@ -244,7 +208,10 @@ export default function ProfilePage() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Profile Details</CardTitle>
 
-                <Dialog open={isEditingDetails} onOpenChange={setIsEditingDetails}>
+                <Dialog
+                  open={isEditingDetails}
+                  onOpenChange={setIsEditingDetails}
+                >
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4" /> Edit
@@ -260,23 +227,12 @@ export default function ProfilePage() {
                       <div>
                         <Label>Name</Label>
                         <Input
-                          value={editedProfile?.name || ""}
+                          value={editedProfile.name}
                           onChange={(e) =>
-                            setEditedProfile((prev) =>
-                              prev ? { ...prev, name: e.target.value } : prev
-                            )
-                          }
-                        />
-                      </div>
-
-                      <div>
-                        <Label>Email</Label>
-                        <Input
-                          value={editedProfile?.email || ""}
-                          onChange={(e) =>
-                            setEditedProfile((prev) =>
-                              prev ? { ...prev, email: e.target.value } : prev
-                            )
+                            setEditedProfile((prev) => ({
+                              ...prev,
+                              name: e.target.value,
+                            }))
                           }
                         />
                       </div>
@@ -284,18 +240,22 @@ export default function ProfilePage() {
                       <div>
                         <Label>Bio</Label>
                         <Input
-                          value={editedProfile?.bio || ""}
+                          value={editedProfile.bio}
                           onChange={(e) =>
-                            setEditedProfile((prev) =>
-                              prev ? { ...prev, bio: e.target.value } : prev
-                            )
+                            setEditedProfile((prev) => ({
+                              ...prev,
+                              bio: e.target.value,
+                            }))
                           }
                         />
                       </div>
                     </div>
 
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsEditingDetails(false)}>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditingDetails(false)}
+                      >
                         Cancel
                       </Button>
                       <Button onClick={handleSaveDetails}>
@@ -328,7 +288,10 @@ export default function ProfilePage() {
             <Card className="border-2">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Security</CardTitle>
-                <Dialog open={isChangingPassword} onOpenChange={setIsChangingPassword}>
+                <Dialog
+                  open={isChangingPassword}
+                  onOpenChange={setIsChangingPassword}
+                >
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       <Lock className="w-4 h-4" /> Change Password
@@ -359,18 +322,28 @@ export default function ProfilePage() {
                         />
                       </div>
 
-                      {newPassword && confirmPassword && newPassword !== confirmPassword && (
-                        <p className="text-sm text-red-600">Passwords do not match</p>
-                      )}
+                      {newPassword &&
+                        confirmPassword &&
+                        newPassword !== confirmPassword && (
+                          <p className="text-sm text-red-600">
+                            Passwords do not match
+                          </p>
+                        )}
                     </div>
 
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsChangingPassword(false)}>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsChangingPassword(false)}
+                      >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleChangePassword}
-                        disabled={newPassword !== confirmPassword || newPassword.length < 8}
+                        disabled={
+                          newPassword !== confirmPassword ||
+                          newPassword.length < 8
+                        }
                       >
                         Update Password
                       </Button>
@@ -380,83 +353,9 @@ export default function ProfilePage() {
               </CardHeader>
 
               <CardContent>
-                <p className="text-sm text-muted-foreground">Last changed recently</p>
-              </CardContent>
-            </Card>
-
-            {/* Friends */}
-            <Card className="border-2">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Friends & Collaborators</CardTitle>
-
-                <Dialog open={isAddingFriend} onOpenChange={setIsAddingFriend}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Plus className="w-4 h-4" /> Add Friend
-                    </Button>
-                  </DialogTrigger>
-
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Friend</DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-4 py-4">
-                      <div>
-                        <Label>Username</Label>
-                        <Input
-                          value={newFriendUsername}
-                          onChange={(e) => setNewFriendUsername(e.target.value)}
-                        />
-                      </div>
-
-                      <div>
-                        <Label>Email</Label>
-                        <Input
-                          value={newFriendEmail}
-                          onChange={(e) => setNewFriendEmail(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddingFriend(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleAddFriend}>Add Friend</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </CardHeader>
-
-              <CardContent className="space-y-3">
-                {friends.length === 0 ? (
-                  <p>No friends yet</p>
-                ) : (
-                  friends.map((friend) => (
-                    <div
-                      key={friend.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="bg-foreground text-background text-xs font-bold">
-                            {friend.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div className="text-sm">
-                          <p className="font-semibold">{friend.username}</p>
-                          <p className="text-xs text-muted-foreground">{friend.email}</p>
-                        </div>
-                      </div>
-
-                      <Button variant="ghost" size="sm" onClick={() => handleRemoveFriend(friend.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))
-                )}
+                <p className="text-sm text-muted-foreground">
+                  Last changed recently
+                </p>
               </CardContent>
             </Card>
           </div>
