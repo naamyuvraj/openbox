@@ -1,12 +1,9 @@
 import express from "express";
 import {
-    createProject,
-    updateProject,
-    deleteProject,
-    getProject,
-    getAllProjects,
-    addCollaborator,
-    removeCollaborator,
+  createProject,
+  getUserProjects,
+  getProjectById,
+  addCollaborator,
 } from "../controllers/project.controller.js";
 
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -15,25 +12,16 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-// project create kar
-router.post("/",createProject);
+// Create a new project
+router.post("/", createProject);
 
-// project update kar
-router.put("/:id", updateProject);
+// Get all projects of logged-in user
+router.get("/", getUserProjects);
 
-// delete kar project 
-router.delete("/:id", deleteProject);
+// Get a single project by ID
+router.get("/:id", getProjectById);
 
-// project lekar aa(get)
-router.get("/:id", getProject);
-
-// saara project laa
-router.get("/", getAllProjects);
-
-// add collaborator to project
+// Add a collaborator to a project
 router.post("/collaborators/:id", addCollaborator);
-
-//remove collaborator 
-router.delete("/collaborators/:id", removeCollaborator);
 
 export default router;

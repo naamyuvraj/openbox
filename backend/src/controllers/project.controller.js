@@ -1,205 +1,93 @@
-import Project from "../models/project.model.js";
+import Project from "../models/repo.model.js";
 
-// ==================
-// Create Project  
-// ==================
+// ==============================
+// Create a new project / repo
+// ==============================
 export const createProject = async (req, res) => {
   try {
-    const { title, description, owner_id } = req.body;
+    const { name, description } = req.body;
+    const user_id = req.user.id; // from JWT
 
-    if (!title || !description || !owner_id) {
-      console.warn("[PROJECT][WARN] Missing fields:", { title, description, owner_id });
-      return res.status(400).json({ message: "Please fill all fields" });
+    if (!name) {
+      return res.status(400).json({ message: "Please provide a project name" });
     }
 
     const newProject = new Project({
-      title,
-      description,
-      owner_id,
+      name,
+      description: description || "",
+      user_id,
     });
 
     await newProject.save();
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "Project created successfully",
       project: newProject,
     });
   } catch (err) {
-    return res.status(500).json({ message: "Server error", error: err.message });
+    console.error("[CREATE PROJECT ERROR]", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ===============
-// Update Project
-// ===============
 
-export const updateProject = async (req, res) => {
+// ==============================
+// Get all projects of the user
+// ==============================
+export const getUserProjects = async (req, res) => {
   try {
-    const project_id = req.params.id;
-    const { title, description } = req.body;
-
-    const project = await Project.findById(project_id);
-
-    if (!project) {
-      return res.status(404).json({ Error: "Project Not Found" });
-    }
-
-    if (project.owner_id.toString() !== req.user.id) {
-      return res.status(403).json({ Error: "Access Denied" });
-    }
-
-    project.title = title || project.title;
-    project.description = description || project.description;
-
-    await project.save();
-
-    return res.status(200).json({
-      message: "Project updated",
-      project,
-    });
+    const user_id = req.user.id;
+    const projects = await Project.find({ user_id }).sort({ createdAt: -1 });
+    res.status(200).json({ projects });
   } catch (err) {
-    return res.status(500).json({ message: "Server error", error: err.message });
-  }
-};
-
-// ================
-// Delete Project
-// ================
-export const deleteProject = async (req, res) => {
-  try {
-    const project_id = req.params.id;
-
-    const project = await Project.findById(project_id);
-
-    if (!project) {
-      return res.status(404).json({ Error: "Project Not Found" });
-    }
-
-    if (project.owner_id.toString() !== req.user.id) {
-      return res.status(403).json({ Error: "Access Denied" });
-    }
-
-    await Project.deleteOne({ _id: project_id });
-
-    return res.status(200).json({ message: "Project deleted" });
-  } catch (error) {
-    return res.status(500).json({ message: "Server error", error: error.message });
+    console.error("[GET USER PROJECTS ERROR]", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
 // ==============================
-// Get Single Project (by Id)
+// Get a single project by ID
 // ==============================
-
-export const getProject = async (req, res) => {
+export const getProjectById = async (req, res) => {
   try {
-    const project_id = req.params.id;
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: "Project not found" });
 
-    const project = await Project.findById(project_id);
-
-    if (!project) {
-      return res.status(404).json({ Error: "Project Not Found" });
-    }
-
-    if (project.owner_id.toString() !== req.user.id) {
-      return res.status(403).json({ Error: "Access Denied" });
-    }
-
-    return res.status(200).json({ project });
+    res.status(200).json({ project });
   } catch (err) {
-    return res.status(500).json({ message: "Server error", error: err.message });
+    console.error("[GET PROJECT ERROR]", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ===========================
-// Get All Projects of User 
-// ===========================
-export const getAllProjects = async (req, res) => {
-  try {
-    const owner_id = req.user.id;
-
-    const projects = await Project.find({ owner_id });
-
-    return res.status(200).json({ projects });
-  } catch (err) {
-    return res.status(500).json({ message: "Server error", error: err.message });
-  }
-};
-
-// ======================
-// Add Collaborator 
-// ======================
-
+// ==============================
+// Add collaborator to project
+// ==============================
 export const addCollaborator = async (req, res) => {
   try {
-    const project_id = req.params.id;
-    const { collaborator_id } = req.body;
+    const { collaboratorId } = req.body;
+    const projectId = req.params.id;
 
-    const project = await Project.findById(project_id);
+    if (!collaboratorId)
+      return res
+        .status(400)
+        .json({ message: "Please provide collaborator ID" });
 
-    if (!project) {
-      return res.status(404).json({ Error: "Project Not Found" });
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    // avoid duplicates
+    if (!project.collaborators.includes(collaboratorId)) {
+      project.collaborators.push(collaboratorId);
+      await project.save();
     }
 
-    if (project.owner_id.toString() !== req.user.id) {
-      return res.status(403).json({ Error: "Access Denied" });
-    }
-
-    if (project.collaborators.includes(collaborator_id)) {
-      return res.status(400).json({ Error: "User is already a collaborator" });
-    }
-
-    project.collaborators.push(collaborator_id);
-    await project.save();
-
-    return res.status(200).json({
-      message: "Collaborator added",
+    res.status(200).json({
+      message: "Collaborator added successfully",
       project,
     });
   } catch (err) {
-    return res.status(500).json({ message: "Server error", error: err.message });
+    console.error("[ADD COLLABORATOR ERROR]", err);
+    res.status(500).json({ error: err.message });
   }
 };
-
-// =========================
-// remove Collaborator
-// =========================
-
-export const removeCollaborator = async (req, res) => {
-  try {
-    const project_id = req.params.id;
-    const { collaborator_id } = req.body;
-
-    const project = await Project.findById(project_id);
-
-    if (!project){
-      return res.status(404).json({message:"Project nhi hain"})
-    }
-
-    if (project.owner_id.toString() !== req.user.id) {
-      return res.status(403).json({ Error: "Access Denied" });
-    }
-
-    if (!project.collaborators.includes(collaborator_id)) {
-      return res.status(400).json({ Error: "User is not a collaborator" });
-    }
-
-    project.collaborators = project.collaborators.filter(
-      (id) => id.toString() !== collaborator_id
-    );
-
-    await project.save();
-
-    return res.status(200).json({
-      message: "Collaborator removed",
-      project,
-    });
-
-
-
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
-  }
-}
