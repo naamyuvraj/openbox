@@ -34,27 +34,6 @@ const sidebarItems = [
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
-  const [showFriendsModal, setShowFriendsModal] = useState(false)
-  const [friends, setFriends] = useState(mockCollaborators)
-  const [newFriendName, setNewFriendName] = useState("")
-
-  const handleAddFriend = () => {
-    if (newFriendName.trim()) {
-      const newFriend = {
-        id: Date.now().toString(),
-        name: newFriendName,
-        role: "Collaborator",
-        avatar: newFriendName
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase(),
-      }
-      setFriends([...friends, newFriend])
-      setNewFriendName("")
-      setShowFriendsModal(false)
-    }
-  }
 
   return (
     <>
@@ -100,62 +79,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             )
           })}
         </nav>
-
-        {/* Friends/Collaborators Section */}
-        <div className="border-t border-sidebar-border p-3">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-sidebar-foreground/60 uppercase">Friends</p>
-            <Dialog open={showFriendsModal} onOpenChange={setShowFriendsModal}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="w-6 h-6">
-                  <Plus className="w-3 h-3" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Friend to Collaborate</DialogTitle>
-                  <DialogDescription>Invite a friend to collaborate on projects</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="friend-name">Friend Name</Label>
-                    <Input
-                      id="friend-name"
-                      placeholder="e.g., Alex Rivera"
-                      value={newFriendName}
-                      onChange={(e) => setNewFriendName(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowFriendsModal(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddFriend}>Add Friend</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {friends.map((friend) => (
-              <div
-                key={friend.id}
-                className="flex items-center gap-2 p-2 rounded hover:bg-sidebar-primary/20 cursor-pointer transition text-xs"
-              >
-                <Avatar className="w-5 h-5">
-                  <AvatarFallback className="text-[0.5rem] bg-sidebar-primary text-sidebar-primary-foreground font-black">
-                    {friend.avatar}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate text-sidebar-foreground">{friend.name}</p>
-                  <p className="text-sidebar-foreground/60 text-[0.7rem]">{friend.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Footer */}
         <div className="border-t border-sidebar-border p-2">

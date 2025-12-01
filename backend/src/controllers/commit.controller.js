@@ -246,3 +246,87 @@ export const getCommitDiff = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+export const commitChangesFromZip = async (req, res) => {
+  try {
+    const user_id = req.user.id;
+    const zipFile = req.file;
+
+    if (!zipFile) {
+      return res.status(400).json({ message: "ZIP file missing" });
+    }
+
+    const AdmZip = (await import("adm-zip")).default;
+    const zip = new AdmZip(zipFile.buffer);
+    const entries = zip.getEntries();
+
+    if (!entries.length) {
+      return res.status(400).json({ message: "ZIP is empty" });
+    }
+
+    // Project creation name
+    const projectName = zipFile.originalname.replace(/\.zip$/i, "");
+
+    // Create project
+    const project = new Project({
+      name: projectName,
+      description: "Imported ZIP project",
+      user_id,
+    });
+
+    await project.save();
+
+    const commitFiles = [];
+
+    // Push files into DB
+    for (const entry of entries) {
+      if (entry.isDirectory) continue;
+      if (entry.entryName.startsWith("__MACOSX/") || entry.name.startsWith("._")) continue;
+
+      const content = entry.getData().toString("utf-8");
+
+      const file = new File({
+        repo_id: project._id,
+        user_id,
+        file_name: entry.name,
+        file_path: entry.entryName,
+        latest_content: content,
+        latest_version: 1,
+      });
+
+      await file.save();
+
+      commitFiles.push({
+        file_id: file._id,
+        file_name: file.file_name,
+        file_path: file.file_path,
+        version: file.latest_version,
+        content: file.latest_content,
+      });
+    }
+
+    // Create commit
+    const commit = new Commit({
+      repo_id: project._id,
+      user_id,
+      commit_title: "Initial import",
+      message: "",
+      files: commitFiles,
+    });
+
+    await commit.save();
+
+    // Associate commit_id with files
+    for (const f of commitFiles) {
+      await File.findByIdAndUpdate(f.file_id, { commit_id: commit._id });
+    }
+
+    return res.status(201).json({
+      message: "Project imported successfully",
+      project,
+      commit,
+    });
+  } catch (err) {
+    console.error("[ZIP UPLOAD ERROR]", err);
+    res.status(500).json({ error: err.message });
+  }
+};

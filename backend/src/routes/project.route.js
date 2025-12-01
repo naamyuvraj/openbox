@@ -1,4 +1,7 @@
 import express from "express";
+import multer from "multer";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
+
 import {
   createProject,
   getUserProjects,
@@ -6,22 +9,41 @@ import {
   addCollaborator,
 } from "../controllers/project.controller.js";
 
-import { authenticateToken } from "../middlewares/auth.middleware.js";
+import {
+  commitChangesFromZip, // ← we will create this now
+} from "../controllers/commit.controller.js";
 
 const router = express.Router();
 
 router.use(authenticateToken);
 
-// Create a new project
+// Setup multer (memory storage for ZIP)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// -------------------------------
+// CREATE PROJECT (normal)
+// -------------------------------
 router.post("/", createProject);
 
-// Get all projects of logged-in user
+// -------------------------------
+// UPLOAD ZIP → CREATE PROJECT + INITIAL COMMIT
+// -------------------------------
+router.post("/upload", upload.single("projectZip"), commitChangesFromZip);
+
+// -------------------------------
+// GET USER PROJECTS
+// -------------------------------
 router.get("/", getUserProjects);
 
-// Get a single project by ID
+// -------------------------------
+// GET SINGLE PROJECT
+// -------------------------------
 router.get("/:id", getProjectById);
 
-// Add a collaborator to a project
+// -------------------------------
+// ADD COLLABORATOR
+// -------------------------------
 router.post("/collaborators/:id", addCollaborator);
 
 export default router;

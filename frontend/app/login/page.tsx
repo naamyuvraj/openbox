@@ -1,40 +1,61 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Github, Mail } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Mail } from "lucide-react";
+
+// API calls
+import { login, googleLogin } from "../service/app";
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setTimeout(() => {
-      router.push("/dashboard")
-    }, 600)
-  }
+  const router = useRouter();
 
-  const handleOAuth = (provider: string) => {
-    setIsLoading(true)
-    setTimeout(() => {
-      router.push("/dashboard")
-    }, 600)
-  }
+  // --------------------------
+  // EMAIL / PASSWORD LOGIN
+  // --------------------------
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const result = await login({ email, password });
+
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+      }
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --------------------------
+  // GOOGLE OAUTH LOGIN
+  // --------------------------
+  const handleGoogleOAuth = () => {
+    setIsLoading(true);
+    googleLogin(); // Redirects to backend Google OAuth route
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      {/* Left side - Branding */}
+
+      {/* LEFT SIDE */}
       <div className="hidden md:flex md:w-1/2 bg-foreground text-background flex-col justify-center items-center p-12">
         <div className="max-w-md space-y-8">
           <div className="flex items-center gap-3">
@@ -43,6 +64,7 @@ export default function LoginPage() {
             </div>
             <span className="text-2xl font-black tracking-tight">OPENBOX</span>
           </div>
+
           <div className="space-y-4">
             <h1 className="text-5xl font-black leading-tight">Minimal project management.</h1>
             <p className="text-lg text-background/70 leading-relaxed">
@@ -52,37 +74,31 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right side - Form */}
+      {/* RIGHT SIDE (FORM) */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-foreground/20">
           <CardHeader>
             <CardTitle className="text-2xl">Welcome</CardTitle>
             <CardDescription>Sign in to your OpenBox account</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* OAuth buttons */}
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full gap-2 bg-transparent"
-                disabled={isLoading}
-                onClick={() => handleOAuth("google")}
-              >
-                <Mail className="w-4 h-4" />
-                Continue with Google
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full gap-2 bg-transparent"
-                disabled={isLoading}
-                onClick={() => handleOAuth("github")}
-              >
-                <Github className="w-4 h-4" />
-                Continue with GitHub
-              </Button>
-            </div>
 
-            {/* Divider */}
+          <CardContent className="space-y-6">
+
+            {/* ERROR */}
+            {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+
+            {/* GOOGLE BUTTON */}
+            <Button
+              variant="outline"
+              className="w-full gap-2 bg-transparent"
+              disabled={isLoading}
+              onClick={handleGoogleOAuth}
+            >
+              <Mail className="w-4 h-4" />
+              Continue with Google
+            </Button>
+
+            {/* DIVIDER */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border" />
@@ -92,7 +108,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Login form */}
+            {/* EMAIL / PASSWORD FORM */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -125,16 +141,15 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Footer links */}
+            {/* FOOTER */}
             <div className="text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>
-              <Link href="/signup" className="font-bold hover:underline">
-                Sign up
-              </Link>
+              <Link href="/signup" className="font-bold hover:underline">Sign up</Link>
             </div>
+
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }
