@@ -9,6 +9,7 @@ import {
   addCollaborator,
   getProjectDetails,
   updateProjectDescription,
+  deleteProject,
 } from "../controllers/project.controller.js";
 
 import {
