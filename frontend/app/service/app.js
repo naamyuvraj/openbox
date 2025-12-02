@@ -530,4 +530,45 @@ export async function rejectInvitation(inviteId) {
 // frontned -> await rejectInvitation(invite._id);
 
 
+// frontend -> diff patch match api 
+export async function getFileDiff(repoId, filePath, fromVersion, toVersion) {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("User not authenticated");
+
+    const url = `${API_BASE_URL}/api/commits/diff?repoId=${repoId}&file_path=${encodeURIComponent(
+      filePath
+    )}&fromVersion=${fromVersion}&toVersion=${toVersion}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch file diff");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching file diff:", error);
+    throw error;
+  }
+}
+ /// frontned usage ->
+//  const repoId = "692efad1acfbc40a60171a83";
+//  const filePath = "abcd/a.html";
+//  const fromVersion = 2;
+//  const toVersion = 3;
+
+//  const diffData = await getFileDiff(repoId, filePath, fromVersion, toVersion);
+//  console.log(diffData.diff);
+ ///
+
+
 export const API_URL = API_BASE_URL;

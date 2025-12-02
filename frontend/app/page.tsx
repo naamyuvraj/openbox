@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Code, Zap, Shield, GitBranch, Clock, Users, BarChart3, Sparkles, Star, Folder } from "lucide-react";
+import LetterGlitch from "@/components/LetterGlitch";
+// import ResizableNavbar from "@/components/ui/resizable-navbar";
 
 export default function LandingPage() {
   return (
@@ -20,14 +22,22 @@ export default function LandingPage() {
 
           {/* Nav right */}
           <div className="flex items-center gap-4">
-            <Link href="#features" className="text-sm font-medium hover:text-primary transition hidden md:inline">
+            <Link
+              href="#features"
+              className="text-sm font-medium hover:text-primary transition hidden md:inline"
+            >
               Features
             </Link>
-            <Link href="#why" className="text-sm font-medium hover:text-primary transition hidden md:inline">
+            <Link
+              href="#why"
+              className="text-sm font-medium hover:text-primary transition hidden md:inline"
+            >
               Why OpenBox
             </Link>
             <Link href="/login">
-              <Button variant="ghost" size="sm">Sign In</Button>
+              <Button variant="ghost" size="sm">
+                Sign In
+              </Button>
             </Link>
             <Link href="/signup">
               <Button size="sm">Get Started</Button>
@@ -40,22 +50,28 @@ export default function LandingPage() {
       <section className="relative w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(var(--primary-rgb),0.1),transparent_50%)]"></div>
-        
+
+        {/* LetterGlitch Background */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+          <LetterGlitch />
+        </div>
+
         <div className="max-w-6xl mx-auto px-4 py-32 text-center space-y-8 relative">
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium text-primary">
               <Sparkles className="w-3.5 h-3.5" />
-              Lightweight • Fast • Beautiful
+              Lightweight • Fast • Effortless
             </div>
-            
+
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
               Project management
               <span className="block text-primary mt-2">made effortless</span>
             </h1>
-            
+
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Stop wrestling with complicated tools. OpenBox gives you the perfect balance of 
-              powerful features and elegant simplicity—so you can focus on what truly matters.
+              Skip the chaos. OpenBox gives you powerful tools wrapped in
+              effortless simplicity — so you stay focused on building, not
+              battling your workflow.
             </p>
           </div>
 
@@ -73,27 +89,6 @@ export default function LandingPage() {
               </Button>
             </Link>
           </div>
-
-          <p className="text-sm text-muted-foreground">
-            No credit card required • Set up in 2 minutes
-          </p>
-
-          {/* Dashboard Preview */}
-          <div className="mt-20 flex justify-center">
-            <div className="relative border border-border rounded-xl w-full max-w-4xl shadow-2xl overflow-hidden bg-card">
-              <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted/20 flex items-center justify-center p-12">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto">
-                    <BarChart3 className="w-8 h-8 text-primary" />
-                  </div>
-                  <h3 className="text-2xl font-semibold">Beautiful Dashboard</h3>
-                  <p className="text-muted-foreground max-w-md">
-                    Visualize your projects at a glance with an intuitive, clutter-free interface
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -105,8 +100,8 @@ export default function LandingPage() {
               Why teams choose OpenBox
             </h2>
             <p className="text-lg text-muted-foreground">
-              We've reimagined project management from the ground up, eliminating the pain points 
-              that slow teams down
+              We've reimagined project management from the ground up,
+              eliminating the pain points that slow teams down
             </p>
           </div>
 
@@ -148,7 +143,9 @@ export default function LandingPage() {
                     {item.icon}
                   </div>
                   <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">{item.desc}</p>
+                  <p className="text-muted-foreground leading-relaxed mb-4">
+                    {item.desc}
+                  </p>
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     {item.highlight}
@@ -214,7 +211,9 @@ export default function LandingPage() {
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  {feature.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -229,7 +228,8 @@ export default function LandingPage() {
               Get started in minutes
             </h2>
             <p className="text-lg text-muted-foreground">
-              Simple setup. No complicated onboarding. Start managing projects right away.
+              Simple setup. No complicated onboarding. Start managing projects
+              right away.
             </p>
           </div>
 
@@ -256,7 +256,9 @@ export default function LandingPage() {
                   {item.step}
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  {item.desc}
+                </p>
                 {i < 2 && (
                   <ArrowRight className="hidden md:block absolute top-8 -right-4 w-8 h-8 text-muted-foreground/30" />
                 )}
@@ -285,8 +287,9 @@ export default function LandingPage() {
                 Stop juggling tools. Start getting things done.
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                OpenBox brings everything together in one place. No more switching between apps, 
-                searching through emails, or losing track of important updates.
+                OpenBox brings everything together in one place. No more
+                switching between apps, searching through emails, or losing
+                track of important updates.
               </p>
               <ul className="space-y-4">
                 {[
@@ -324,7 +327,7 @@ export default function LandingPage() {
                       <div className="h-3 bg-muted rounded w-1/3"></div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -349,7 +352,7 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Floating elements */}
               <div className="absolute -top-4 -right-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl"></div>
               <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-primary/10 rounded-full blur-2xl"></div>
@@ -372,7 +375,9 @@ export default function LandingPage() {
             </div>
             <div className="space-y-2">
               <div className="text-4xl font-bold text-primary">Secure</div>
-              <p className="text-muted-foreground">Enterprise-grade encryption</p>
+              <p className="text-muted-foreground">
+                Enterprise-grade encryption
+              </p>
             </div>
           </div>
         </div>
@@ -386,11 +391,11 @@ export default function LandingPage() {
               Ready to transform how you work?
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Join forward-thinking teams who've already made the switch. 
-              Start managing projects the smart way—with OpenBox.
+              Join forward-thinking teams who've already made the switch. Start
+              managing projects the smart way—with OpenBox.
             </p>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link href="/signup">
               <Button size="lg" className="px-10 gap-2 text-base">
@@ -417,7 +422,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+              <Link
+                href="/"
+                className="flex items-center gap-2 font-bold text-lg"
+              >
                 <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
                   O
                 </div>
@@ -427,35 +435,98 @@ export default function LandingPage() {
                 Project management made effortless. Focus on what matters.
               </p>
             </div>
-            
+
             <div>
               <h3 className="font-semibold mb-3 text-sm">Product</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="#features" className="hover:text-foreground transition">Features</Link></li>
-                <li><Link href="#why" className="hover:text-foreground transition">Why OpenBox</Link></li>
-                <li><Link href="/signup" className="hover:text-foreground transition">Get Started</Link></li>
+                <li>
+                  <Link
+                    href="#features"
+                    className="hover:text-foreground transition"
+                  >
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#why"
+                    className="hover:text-foreground transition"
+                  >
+                    Why OpenBox
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/signup"
+                    className="hover:text-foreground transition"
+                  >
+                    Get Started
+                  </Link>
+                </li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold mb-3 text-sm">Resources</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/docs" className="hover:text-foreground transition">Documentation</Link></li>
-                <li><Link href="/support" className="hover:text-foreground transition">Support</Link></li>
-                <li><Link href="/blog" className="hover:text-foreground transition">Blog</Link></li>
+                <li>
+                  <Link
+                    href="/docs"
+                    className="hover:text-foreground transition"
+                  >
+                    Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/support"
+                    className="hover:text-foreground transition"
+                  >
+                    Support
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/blog"
+                    className="hover:text-foreground transition"
+                  >
+                    Blog
+                  </Link>
+                </li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold mb-3 text-sm">Company</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/about" className="hover:text-foreground transition">About</Link></li>
-                <li><Link href="/privacy" className="hover:text-foreground transition">Privacy</Link></li>
-                <li><Link href="/terms" className="hover:text-foreground transition">Terms</Link></li>
+                <li>
+                  <Link
+                    href="/about"
+                    className="hover:text-foreground transition"
+                  >
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="hover:text-foreground transition"
+                  >
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/terms"
+                    className="hover:text-foreground transition"
+                  >
+                    Terms
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-border mt-8 pt-8 text-center">
             <p className="text-sm text-muted-foreground">
               © 2024 OpenBox. All rights reserved.
