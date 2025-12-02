@@ -4,55 +4,18 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Code, Zap, Shield, GitBranch, Clock, Users, BarChart3, Sparkles, Star, Folder } from "lucide-react";
 import LetterGlitch from "@/components/LetterGlitch";
-// import ResizableNavbar from "@/components/ui/resizable-navbar";
+import ResizableNavbar  from "@/components/ResizeNav";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Navigation */}
-      <nav className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto h-16 flex items-center justify-between px-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-              O
-            </div>
-            OpenBox
-          </Link>
+    <div className=" bg-background text-foreground">
 
-          {/* Nav right */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="#features"
-              className="text-sm font-medium hover:text-primary transition hidden md:inline"
-            >
-              Features
-            </Link>
-            <Link
-              href="#why"
-              className="text-sm font-medium hover:text-primary transition hidden md:inline"
-            >
-              Why OpenBox
-            </Link>
-            <Link href="/login">
-              <Button variant="ghost" size="sm">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="sm">Get Started</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+      <ResizableNavbar/>
       {/* Hero Section */}
-      <section className="relative w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(var(--primary-rgb),0.1),transparent_50%)]"></div>
+      <section className="relative w-full h-[95vh] overflow-hidden"> 
 
         {/* LetterGlitch Background */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+        <div className="absolute inset-0  h-[95vh] flex items-center justify-center opacity-10">
           <LetterGlitch />
         </div>
 
@@ -529,7 +492,7 @@ export default function LandingPage() {
 
           <div className="border-t border-border mt-8 pt-8 text-center">
             <p className="text-sm text-muted-foreground">
-              © 2024 OpenBox. All rights reserved.
+              © {new Date().getFullYear()} OpenBox. All rights reserved.
             </p>
           </div>
         </div>
