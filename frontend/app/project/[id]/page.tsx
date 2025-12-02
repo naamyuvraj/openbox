@@ -19,7 +19,8 @@ export default function ProjectPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("files");
 
-  const BACKEND = process.env.API_BASE_URL || "http://localhost:5170";
+  const BACKEND =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5170";
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 

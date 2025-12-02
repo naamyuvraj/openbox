@@ -37,7 +37,7 @@ interface ProjectItem {
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
-const [projectName, setProjectName] = useState("");
+  const [projectName, setProjectName] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<
@@ -53,8 +53,7 @@ const [projectName, setProjectName] = useState("");
   useEffect(() => {
     async function load() {
       try {
-        const BACKEND =
-          process.env.API_BASE_URL || "http://localhost:5170";
+        const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL;
         const token = localStorage.getItem("token");
 
         const res = await fetch(`${BACKEND}/projects`, {
@@ -111,6 +110,8 @@ const [projectName, setProjectName] = useState("");
       zip.file(path, file);
     }
 
+
+
     const zipBlob = await zip.generateAsync({ type: "blob" });
 
     const sizeBytes = zipBlob.size;
@@ -128,8 +129,7 @@ const [projectName, setProjectName] = useState("");
     formData.append("projectZip", zipBlob, "project.zip");
     formData.append("project_name", projectName);
 
-
-    const BACKEND = process.env.API_BASE_URL || "http://localhost:5170";
+    const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL;
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -183,6 +183,35 @@ const [projectName, setProjectName] = useState("");
     const matchesStatus = filterStatus === "all" || filterStatus === "active";
     return matchesSearch && matchesStatus;
   });
+
+  async function handleDeleteProject(projectId: string) {
+  const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const token = localStorage.getItem("token");
+
+  if (!confirm("Are you sure you want to delete this project?")) return;
+
+  try {
+    const res = await fetch(`${BACKEND}/projects/${projectId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.message || "Failed to delete project");
+      return;
+    }
+
+    // Remove project from UI
+    setProjects((prev) => prev.filter((p) => p._id !== projectId));
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Failed to delete project");
+  }
+}
+
 
   return (
     <AppLayout>
@@ -380,6 +409,18 @@ const [projectName, setProjectName] = useState("");
                         >
                           <span className="hidden sm:inline">→</span>
                           <ArrowRight className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="gap-2 font-semibold"
+                          onClick={(e) => {
+                            e.preventDefault(); // prevent card click navigation
+                            e.stopPropagation();
+                            handleDeleteProject(project._id);
+                          }}
+                        >
+                          Delete
                         </Button>
                       </div>
                     </div>

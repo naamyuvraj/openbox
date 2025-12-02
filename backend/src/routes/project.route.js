@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { getSingleFile, commitFileChange } from "../controllers/file.controller.js";
 
 import {
   createProject,
@@ -50,6 +51,8 @@ router.get("/", getUserProjects);
 router.get("/:id", getProjectById);
 router.get("/:id/details", authenticateToken, getProjectDetails);
 router.patch("/:id/description", updateProjectDescription);
+router.get("/file/:fileId", authenticateToken, getSingleFile);
+router.post("/file/:fileId/commit", authenticateToken, commitFileChange);
 
 router.delete("/:id", deleteProject);
 
