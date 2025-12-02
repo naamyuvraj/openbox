@@ -106,6 +106,8 @@ export default function ProjectsPage() {
         (file as any).webkitRelativePath ||
         (file as any).relativePath ||
         file.name;
+        
+    if (file.name.startsWith(".")) continue;
 
       zip.file(path, file);
     }

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronRight, Save, RotateCcw, MessageSquare } from "lucide-react";
+import { ChevronRight, Save, RotateCcw } from "lucide-react";
 import MonacoEditor from "@monaco-editor/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -26,38 +26,55 @@ export default function EditorPage() {
   // ---------------------------------------------------------
   // FETCH LATEST VERSION OF THIS FILE
   // ---------------------------------------------------------
-useEffect(() => {
-  async function loadContent() {
-    const res = await fetch(`${BACKEND}/projects/${id}/details`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  useEffect(() => {
+    async function loadContent() {
+      const res = await fetch(`${BACKEND}/projects/${id}/details`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (!res.ok) {
-      console.log("Error loading project details");
-      return;
+      if (!res.ok) {
+        console.log("Error loading project details");
+        return;
+      }
+
+      const data = await res.json();
+
+      const file = data.files.find((f) => f._id === fileId);
+
+      if (!file) {
+        console.error("File not found");
+        return;
+      }
+
+      setFileName(file.file_name);
+
+      // IMPORTANT: your backend uses latest_content, not versions[]
+      setCode(file.latest_content || "");
+      setOriginalCode(file.latest_content || "");
     }
 
-    const data = await res.json();
+    loadContent();
+  }, [id, fileId]);
 
-    const file = data.files.find((f) => f._id === fileId);
+  // ---------------------------------------------------------
+  // DETERMINE LANGUAGE FOR MONACO
+  // ---------------------------------------------------------
+  const getLanguage = (name: string) => {
+    if (!name) return "plaintext";
+    if (name.endsWith(".ts") || name.endsWith(".tsx")) return "typescript";
+    if (name.endsWith(".js") || name.endsWith(".jsx")) return "javascript";
+    if (name.endsWith(".html") || name.endsWith(".htm")) return "html";
+    if (name.endsWith(".css")) return "css";
+    if (name.endsWith(".json")) return "json";
+    return "plaintext";
+  };
 
-    if (!file) {
-      console.error("File not found");
-      return;
-    }
-
-    setFileName(file.file_name);
-
-    // IMPORTANT: your backend uses latest_content, not versions[]
-    setCode(file.latest_content || "");
-    setOriginalCode(file.latest_content || "");
-  }
-
-  loadContent();
-}, [id, fileId]);
-
-  const handleSave = async () => {
-    const res = await fetch(`${BACKEND}/files/${fileId}/commit`, {
+  // ---------------------------------------------------------
+  // SAVE / COMMIT HANDLERS
+  // ---------------------------------------------------------
+const handleSave = async () => {
+  try {
+    const res = await fetch(`${BACKEND}/api/commits/file/${fileId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -70,18 +87,35 @@ useEffect(() => {
       }),
     });
 
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error("Commit failed:", errorData);
+      alert(
+        "Failed to commit changes: " + (errorData.message || res.statusText)
+      );
+      return;
+    }
+
     setOriginalCode(code);
     setHasChanges(false);
     setCommitMessage("");
 
     alert("Committed successfully!");
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Failed to commit changes: " + err);
+  }
+};
+
 
   const handleDiscard = () => {
     setCode(originalCode);
     setHasChanges(false);
   };
 
+  // ---------------------------------------------------------
+  // RENDER
+  // ---------------------------------------------------------
   return (
     <AppLayout>
       <div className="min-h-screen bg-background flex flex-col">
@@ -96,81 +130,67 @@ useEffect(() => {
             </Link>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
             <span className="text-foreground font-medium">{fileName}</span>
+            {hasChanges && (
+              <span className="ml-4 text-xs text-yellow-600">Unsaved</span>
+            )}
           </div>
         </div>
 
-        {/* Editor Layout */}
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full flex flex-col">
-            {/* Toolbar */}
-            <div className="border-b border-border bg-card px-4 py-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{fileName}</span>
-                {hasChanges && (
-                  <span className="text-xs text-yellow-600">Unsaved</span>
-                )}
-              </div>
+        {/* Editor + Commit Panel */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Monaco Editor */}
+          <div className="flex-1 min-w-0">
+            <MonacoEditor
+              language={getLanguage(fileName)}
+              value={code}
+              onChange={(value) => {
+                setCode(value || "");
+                setHasChanges(value !== originalCode);
+              }}
+              height="100%"
+              theme="vs-dark"
+              options={{
+                automaticLayout: true,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                fontSize: 14,
+                wordWrap: "on",
+              }}
+            />
+          </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleDiscard}
-                  disabled={!hasChanges}
-                  className="gap-2 bg-transparent"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Discard
-                </Button>
+          {/* Commit Sidebar */}
+          <div className="w-80 flex-shrink-0 border-l border-border bg-card p-4 space-y-4">
+            <h3 className="font-semibold text-sm">Commit Message</h3>
 
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={!hasChanges}
-                  className="gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  Commit
-                </Button>
-              </div>
-            </div>
+            <Input
+              value={commitMessage}
+              onChange={(e) => setCommitMessage(e.target.value)}
+              placeholder="Describe your changes..."
+              className="text-sm"
+            />
 
-            {/* Editor + Commit Panel */}
-            <div className="flex-1 overflow-hidden flex">
-              {/* Monaco Editor */}
-              <div className="flex-1">
-                <MonacoEditor
-                  language="typescript"
-                  value={code}
-                  onChange={(value) => {
-                    setCode(value || "");
-                    setHasChanges(value !== originalCode);
-                  }}
-                  height="100%"
-                  theme="vs-dark"
-                />
-              </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 gap-2"
+                onClick={handleDiscard}
+                disabled={!hasChanges}
+              >
+                <RotateCcw className="w-4 h-4" />
+                Discard
+              </Button>
 
-              {/* Commit Sidebar */}
-              <div className="w-80 border-l border-border bg-card p-4 space-y-4">
-                <h3 className="font-semibold text-sm">Commit Message</h3>
-
-                <Input
-                  value={commitMessage}
-                  onChange={(e) => setCommitMessage(e.target.value)}
-                  placeholder="Describe your changes..."
-                  className="text-sm"
-                />
-
-                <Button
-                  size="sm"
-                  className="w-full"
-                  disabled={!commitMessage || !hasChanges}
-                  onClick={handleSave}
-                >
-                  Commit Changes
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={handleSave}
+                disabled={!hasChanges || !commitMessage}
+              >
+                <Save className="w-4 h-4" />
+                Commit
+              </Button>
             </div>
           </div>
         </div>

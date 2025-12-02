@@ -101,6 +101,10 @@ export async function getAuthProfile() {
 
 export function logout() {
   clearAuthToken();
+  if (typeof window !== "undefined") {
+    window.location.href = "/login"; 
+  }
+
 }
 
 export async function createProject(projectData) {

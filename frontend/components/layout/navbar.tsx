@@ -24,18 +24,26 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState<any>(null);
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const data = await getAuthProfile(); // fetch from backend
-        setUser(data.user);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-        setUser(null);
-      }
+useEffect(() => {
+  async function fetchUser() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setUser(null);
+      return;
     }
-    fetchUser();
-  }, []);
+
+    try {
+      const data = await getAuthProfile();
+      setUser(data.user);
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+      setUser(null);
+    }
+  }
+
+  fetchUser();
+}, []);
+
 
   const initials = user?.name
     ? user.name
@@ -109,7 +117,14 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             </DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                logout(); 
+              }}
+              className="cursor-pointer"
+            >
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}

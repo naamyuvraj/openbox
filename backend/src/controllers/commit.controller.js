@@ -364,3 +364,62 @@ export const getDiffBetweenVersions = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+// Commit changes for a single file
+export const commitSingleFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const { new_content, message, project_id } = req.body;
+    const user_id = req.user.id;
+
+    if (!new_content) {
+      return res.status(400).json({ message: "New content is required" });
+    }
+
+    const file = await File.findById(fileId);
+    if (!file) return res.status(404).json({ message: "File not found" });
+
+    const dmp = new DiffMatchPatch();
+    const oldContent = file.latest_content || "";
+
+    // Update file
+    file.latest_content = new_content;
+    file.latest_version += 1;
+    file.user_id = user_id;
+    await file.save();
+
+    // Compute diff
+    const diffs = dmp.diff_main(oldContent, new_content);
+    dmp.diff_cleanupSemantic(diffs);
+    const diffHTML = oldContent === "" ? "" : dmp.diff_prettyHtml(diffs);
+
+    // Create commit
+    const commit = new Commit({
+      repo_id: project_id || file.repo_id,
+      user_id,
+      commit_title: "Updated " + file.file_name,
+      message: message || "",
+      files: [
+        {
+          file_id: file._id,
+          file_name: file.file_name,
+          file_path: file.file_path,
+          version: file.latest_version,
+          content: file.latest_content,
+          diff: diffHTML,
+        },
+      ],
+    });
+
+    await commit.save();
+
+    // Associate commit with file
+    file.commit_id = commit._id;
+    await file.save();
+
+    return res.status(201).json({ message: "Commit created", commit });
+  } catch (err) {
+    console.error("[SINGLE FILE COMMIT ERROR]", err);
+    return res.status(500).json({ error: err.message });
+  }
+};
