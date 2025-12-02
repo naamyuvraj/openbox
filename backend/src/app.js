@@ -64,6 +64,9 @@ app.use("/api/commits", commitRoutes);
 
 app.get("/ping", (req, res) => res.send("pong"));
 
+
+
+
 app.get("/", (req, res) => {
   res.send("Server chal rha hain!");
 });

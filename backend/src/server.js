@@ -1,6 +1,7 @@
 import app from "./app.js";
 import dotenv from "dotenv";
 import cron from "node-cron";
+import axios from "axios";
 
 dotenv.config();
 
@@ -15,6 +16,11 @@ cron.schedule("*/12 * * * *", () => {
 // ==================================
 // Start Server
 // ==================================
+
+setInterval(() => {
+  axios.get("https://openbox-r8z3.onrender.com/").catch(() => {});
+}, 5 * 60 * 1000);
+
 
 const PORT = process.env.PORT || 5170;
 
