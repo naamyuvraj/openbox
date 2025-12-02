@@ -71,5 +71,3 @@
 // get /api/commits/:id
 //
 // get /api/commits/repo/:repoId
-//
-// get /api/commits/:id/diff
