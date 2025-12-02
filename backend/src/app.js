@@ -9,6 +9,7 @@ import projectRoutes from "./routes/project.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import fileRoutes from "./routes/file.route.js";
 import commitRoutes from "./routes/commit.route.js";
+import collaborationRoutes from "./routes/collaboration.route.js";
 
 import "./config/passport.js";
 
@@ -61,12 +62,10 @@ app.use("/projects", projectRoutes);
 app.use("/user", profileRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/commits", commitRoutes);
+app.use("/api/collaboration", collaborationRoutes);
 
+//  public route with auth needed for testing
 app.get("/ping", (req, res) => res.send("pong"));
-
-
-
-
 app.get("/", (req, res) => {
   res.send("Server chal rha hain!");
 });
