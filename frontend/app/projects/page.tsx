@@ -54,7 +54,7 @@ const [projectName, setProjectName] = useState("");
     async function load() {
       try {
         const BACKEND =
-          process.env.NEXT_PUBLIC_BACKEND || "http://localhost:5170";
+          process.env.API_BASE_URL || "http://localhost:5170";
         const token = localStorage.getItem("token");
 
         const res = await fetch(`${BACKEND}/projects`, {
@@ -129,7 +129,7 @@ const [projectName, setProjectName] = useState("");
     formData.append("project_name", projectName);
 
 
-    const BACKEND = process.env.NEXT_PUBLIC_BACKEND || "http://localhost:5170";
+    const BACKEND = process.env.API_BASE_URL || "http://localhost:5170";
     const token = localStorage.getItem("token");
 
     if (!token) {
