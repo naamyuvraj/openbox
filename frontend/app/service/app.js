@@ -409,4 +409,125 @@ export function isAuthenticated() {
   return token !== null && token !== undefined && token !== '';
 }
 
+
+
+
+// Collaborators apis -> 
+
+export async function inviteCollaborator(inviteData) {
+  try {
+    const token = getAuthToken();
+
+    const response = await fetch(`${API_BASE_URL}/api/collaboration/invite`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(inviteData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to send invite");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error sending invite:", error);
+    throw error;
+  }
+}
+// frontned usage -> 
+// await inviteCollaborator({
+//   project_id: projectId,
+//   inviteeEmail: email,
+// });
+
+
+export async function getMyInvitations() {
+  try {
+    const token = getAuthToken();
+
+    const response = await fetch(`${API_BASE_URL}/api/collaboration/my-invitations`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch invitations");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error getting invitations:", error);
+    throw error;
+  }
+}
+// frontiend use -> 
+// const invites = await getMyInvitations();
+// console.log(invites.invitations);
+
+
+export async function acceptInvitation(inviteId) {
+  try {
+    const token = getAuthToken();
+
+    const response = await fetch(`${API_BASE_URL}/api/collaboration/${inviteId}/accept`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to accept invitation");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error accepting invitation:", error);
+    throw error;
+  }
+}
+// frontned -> await acceptInvitation(invite._id);
+
+
+export async function rejectInvitation(inviteId) {
+  try {
+    const token = getAuthToken();
+
+    const response = await fetch(`${API_BASE_URL}/api/collaboration/${inviteId}/reject`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to reject invitation");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error rejecting invitation:", error);
+    throw error;
+  }
+}
+
+// frontned -> await rejectInvitation(invite._id);
+
+
 export const API_URL = API_BASE_URL;

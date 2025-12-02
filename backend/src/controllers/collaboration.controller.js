@@ -52,9 +52,90 @@ export const inviteCollaborator = async (req, res) => {
       message: "Collaboration invite sent.",
       invite,
     });
-
   } catch (error) {
     console.error("Invite collaborator error:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMyInvitations = async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+
+    const invitations = await Collaboration.find({
+      inviteeEmail: userEmail,
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: "Invitations fetched successfully",
+      invitations,
+    });
+  } catch (error) {
+    console.error("Get invitations error:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const acceptInvitation = async (req, res) => {
+  try {
+    const inviteId = req.params.id;
+    const userEmail = req.user.email;
+    const userId = req.user.id;
+
+    const invite = await Collaboration.findById(inviteId);
+
+    if (!invite) {
+      return res.status(404).json({ message: "Invite not found" });
+    }
+
+    if (invite.inviteeEmail !== userEmail) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    invite.status = "accepted";
+    await invite.save();
+
+    // Add user to project collaborators
+    await Project.findByIdAndUpdate(invite.project_id, {
+      $addToSet: { collaborators: userId },
+    });
+
+    return res.status(200).json({
+      message: "Invitation accepted",
+      invite,
+    });
+  } catch (error) {
+    console.error("Accept invitation error:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const rejectInvitation = async (req, res) => {
+  try {
+    const inviteId = req.params.id;
+    const userEmail = req.user.email;
+
+    const invite = await Collaboration.findById(inviteId);
+
+    if (!invite) {
+      return res.status(404).json({ message: "Invite not found" });
+    }
+
+    if (invite.inviteeEmail !== userEmail) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    invite.status = "rejected";
+    await invite.save();
+
+    return res.status(200).json({
+      message: "Invitation rejected",
+      invite,
+    });
+  } catch (error) {
+    console.error("Reject invitation error:", error);
     return res.status(500).json({ message: error.message });
   }
 };
