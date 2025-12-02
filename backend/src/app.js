@@ -26,6 +26,7 @@ app.use(
       "http://localhost:3000",          
       "http://localhost:5170",          
       "https://openbox-dashboard.vercel.app", 
+      "https://openbox-dev4ce.vercel.app"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
