@@ -25,6 +25,29 @@ function buildFileTree(files) {
   return root;
 }
 
+export const deleteProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user.id;
+
+   const project = await Project.findOne({ _id: id, user_id });
+    if (!project) {
+      return res.status(404).json({ message: "Project not found or unauthorized" });
+    }
+
+    await File.deleteMany({ repo_id: id });
+
+    await Commit.deleteMany({ repo_id: id });
+
+    await Project.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: "Project deleted successfully" });
+  } catch (err) {
+    console.error("Delete project error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 
 export const getProjectDetails = async (req, res) => {
   try {

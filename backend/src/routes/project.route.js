@@ -50,6 +50,7 @@ router.get("/:id", getProjectById);
 router.get("/:id/details", authenticateToken, getProjectDetails);
 router.patch("/:id/description", updateProjectDescription);
 
+router.delete("/:id", deleteProject);
 
 
 // -------------------------------
