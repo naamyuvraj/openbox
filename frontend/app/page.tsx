@@ -2,18 +2,30 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Code, Zap, Shield, GitBranch, Clock, Users, BarChart3, Sparkles, Star, Folder } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Code,
+  Zap,
+  Shield,
+  GitBranch,
+  Clock,
+  Users,
+  BarChart3,
+  Sparkles,
+  Star,
+  Folder,
+} from "lucide-react";
 import LetterGlitch from "@/components/LetterGlitch";
-import ResizableNavbar  from "@/components/ResizeNav";
+import ResizableNavbar from "@/components/ResizeNav";
+import Footer from "@/components/Footer";
 
 export default function LandingPage() {
   return (
     <div className=" bg-background text-foreground">
-
-      <ResizableNavbar/>
+      <ResizableNavbar />
       {/* Hero Section */}
-      <section className="relative w-full h-[95vh] overflow-hidden"> 
-
+      <section className="relative w-full h-[95vh] overflow-hidden">
         {/* LetterGlitch Background */}
         <div className="absolute inset-0  h-[95vh] flex items-center justify-center opacity-10">
           <LetterGlitch />
@@ -56,82 +68,120 @@ export default function LandingPage() {
       </section>
 
       {/* Why OpenBox Section */}
-      <section id="why" className="py-24 bg-muted/30 border-t border-border">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold">
-              Why teams choose OpenBox
+      <section
+        id="why"
+        className="py-28 bg-black border-t border-white/20 relative overflow-hidden"
+      >
+        {/* Soft blueprint grid */}
+        <div className="absolute inset-0 opacity-[0.04] bg-[url('/grid.svg')] bg-center"></div>
+
+        <div className="relative max-w-6xl mx-auto px-4">
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-white to-white/40 bg-clip-text text-transparent">
+              Your Code. Your History. One Unified Workspace.
             </h2>
-            <p className="text-lg text-muted-foreground">
-              We've reimagined project management from the ground up,
-              eliminating the pain points that slow teams down
+            <p className="text-lg text-white/50">
+              OpenBox connects editing, version tracking, and project structure
+              into one lightweight foundation — built to grow with both visual
+              and command-line workflows.
             </p>
           </div>
 
-          {/* Why Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-            {[
-              {
-                icon: <Clock className="w-8 h-8 text-primary" />,
-                title: "Save Hours Every Week",
-                desc: "No more endless meetings or status update emails. OpenBox keeps everyone on the same page automatically, giving you time back for actual work.",
-                highlight: "3+ hours saved weekly",
-              },
-              {
-                icon: <Sparkles className="w-8 h-8 text-primary" />,
-                title: "Delightful to Use",
-                desc: "Project management shouldn't feel like a chore. Our beautiful, intuitive interface makes organizing work genuinely enjoyable.",
-                highlight: "Love at first click",
-              },
-              {
-                icon: <Users className="w-8 h-8 text-primary" />,
-                title: "Built for Remote Teams",
-                desc: "Whether you're across the hall or across the world, collaborate seamlessly with real-time updates and instant notifications.",
-                highlight: "Work from anywhere",
-              },
-              {
-                icon: <Zap className="w-8 h-8 text-primary" />,
-                title: "Lightning Fast Performance",
-                desc: "Tired of slow, laggy tools? OpenBox is engineered for speed. Every click, every update happens instantly—no waiting around.",
-                highlight: "Sub-second response",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="relative p-8 rounded-xl border border-border bg-card hover:shadow-lg transition-all duration-300 group"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
-                <div className="relative">
-                  <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    {item.icon}
+          {/* GUI-Layer Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-14">
+            {/* Editor */}
+            <div className="relative group p-1 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-primary/40 transition-all">
+              <div className="rounded-xl bg-black/40 p-5 space-y-4">
+                <div className="flex items-center gap-2 text-white/40 text-sm mb-3">
+                  <span className="w-3 h-3 bg-red-500/50 rounded-full"></span>
+                  <span className="w-3 h-3 bg-yellow-500/50 rounded-full"></span>
+                  <span className="w-3 h-3 bg-green-500/50 rounded-full"></span>
+                  <span className="ml-2">editor.js — Monaco Editor</span>
+                </div>
+
+                <pre className="text-[13px] text-white/60 leading-relaxed">
+                  <span className="text-blue-400">function</span>{" "}
+                  <span className="text-emerald-400">startEditor</span>() {"{"}
+                  console.log(
+                  <span className="text-amber-300">"Monaco ready"</span>);
+                  {"}"}
+                </pre>
+
+                <h3 className="text-2xl font-semibold text-white">
+                  Integrated Monaco Editor
+                </h3>
+                <p className="text-white/50">
+                  A familiar coding experience built directly into the
+                  workspace, designed to keep context switching to a minimum.
+                </p>
+              </div>
+            </div>
+
+            {/* Commits */}
+            <div className="relative group p-1 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-primary/40 transition-all">
+              <div className="rounded-xl bg-black/40 p-5 space-y-4">
+                <div className="flex justify-between text-white/40 text-sm mb-2">
+                  <span>Commit Preview</span>
+                  <span>v0.3</span>
+                </div>
+
+                <div className="bg-black/60 p-3 rounded-lg text-sm space-y-1 text-white/70">
+                  <div className="text-emerald-400">+ Added new component</div>
+                  <div className="text-emerald-400">
+                    + Updated workspace layout
                   </div>
-                  <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    {item.desc}
+                  <div className="text-red-400">- Removed unused imports</div>
+                </div>
+
+                <h3 className="text-2xl font-semibold text-white">
+                  Version Control Made Understandable
+                </h3>
+                <p className="text-white/50">
+                  A clear commit flow that helps you see what changed and why —
+                  adaptable for both visual and future CLI-driven workflows.
+                </p>
+              </div>
+            </div>
+
+            {/* Repo Management */}
+            <div className="relative group p-1 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-primary/40 transition-all md:col-span-2">
+              <div className="rounded-xl bg-black/40 p-7 grid md:grid-cols-2 gap-6 items-center">
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-semibold text-white">
+                    Lightweight Project Management
+                  </h3>
+                  <p className="text-white/50">
+                    Navigate your files and versions with a simple, structured
+                    view — built on a clean architecture that works seamlessly
+                    across interfaces.
                   </p>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    {item.highlight}
-                  </div>
+                </div>
+
+                <div className="bg-black/60 p-4 rounded-lg text-sm text-white/60">
+                  <div>📁 src/</div>
+                  <div className="ml-4">components/</div>
+                  <div className="ml-4">utils/</div>
+                  <div>📁 configs/</div>
+                  <div>📄 README.md</div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-background">
+      <section id="features" className="py-24 bg-black border-t border-white/10">
+        <div className="text-center max-w-3xl mx-auto space-y-4 mb-20">
+          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-white to-white/40 bg-clip-text text-transparent">
+            Everything you need to succeed
+          </h2>
+          <p className="text-lg text-white/50">
+            All the essential tools, beautifully integrated
+          </p>
+        </div>
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold">
-              Everything you need to succeed
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              All the essential tools, beautifully integrated
-            </p>
-          </div>
-
           {/* Feature Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
@@ -168,7 +218,7 @@ export default function LandingPage() {
             ].map((feature, i) => (
               <div
                 key={i}
-                className="p-8 rounded-xl border border-border bg-card hover:shadow-lg hover:border-primary/50 transition-all duration-300"
+                className="p-8 rounded-xl border border-white/20 bg-black/10 hover:shadow-lg hover:border-primary/50 transition-all duration-300"
               >
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                   {feature.icon}
@@ -381,122 +431,16 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-muted/30 py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 font-bold text-lg"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                  O
-                </div>
-                OpenBox
-              </Link>
-              <p className="text-sm text-muted-foreground">
-                Project management made effortless. Focus on what matters.
-              </p>
-            </div>
+      <div className="border-t  border-border bg-black">
+        <Footer />
 
-            <div>
-              <h3 className="font-semibold mb-3 text-sm">Product</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link
-                    href="#features"
-                    className="hover:text-foreground transition"
-                  >
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#why"
-                    className="hover:text-foreground transition"
-                  >
-                    Why OpenBox
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/signup"
-                    className="hover:text-foreground transition"
-                  >
-                    Get Started
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-3 text-sm">Resources</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link
-                    href="/docs"
-                    className="hover:text-foreground transition"
-                  >
-                    Documentation
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/support"
-                    className="hover:text-foreground transition"
-                  >
-                    Support
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/blog"
-                    className="hover:text-foreground transition"
-                  >
-                    Blog
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-3 text-sm">Company</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link
-                    href="/about"
-                    className="hover:text-foreground transition"
-                  >
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/privacy"
-                    className="hover:text-foreground transition"
-                  >
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/terms"
-                    className="hover:text-foreground transition"
-                  >
-                    Terms
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-border mt-8 pt-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} OpenBox. All rights reserved.
-            </p>
-          </div>
+        <div className="border-t border-border py-4">
+          {/* Developed by  4 members so i want their name along with guthub*/}
+          <p className="text-center text-md text-muted-foreground py-4">
+            Developed by Oashe Mehta , Nihal C , Yuvraj and Sumit Nayak
+          </p>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
