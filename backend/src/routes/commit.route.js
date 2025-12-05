@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-// Initial zip upload 
+// fisrt zip upload 
 router.post("/", upload.single("folder"), commitChanges);
 
 router.get("/diff", getDiffBetweenVersions);
