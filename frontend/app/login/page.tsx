@@ -87,7 +87,7 @@ export default function LoginPage() {
             {/* ERROR */}
             {error && <p className="text-red-500 text-center text-sm">{error}</p>}
 
-            {/* GOOGLE BUTTON */}
+            {/* GOOGLE BUTTON
             <Button
               variant="outline"
               className="w-full gap-2 bg-transparent"
@@ -96,7 +96,7 @@ export default function LoginPage() {
             >
               <Mail className="w-4 h-4" />
               Continue with Google
-            </Button>
+            </Button> */}
 
             {/* DIVIDER */}
             <div className="relative">
@@ -104,7 +104,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-background px-2 text-muted-foreground">Or email</span>
+                <span className="bg-background px-2 text-muted-foreground">Email</span>
               </div>
             </div>
 
