@@ -1,21 +1,19 @@
-import express from 'express';
-import {
-  updateBioAvatar,
-  getProfile,
-  changePassword,
-} from "../controllers/user.controller.js";
-import { authenticateToken } from '../middlewares/auth.middleware.js';
+import express from "express";
+import UserController from "../controllers/user.controller.js";
+import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-router.use(authenticateToken);
+// protect routes inside
+router.use(protect);
 
 // Get user profile
-router.get('/profile', getProfile);
+router.get("/", UserController.getProfile);
 
-// Update user bio and avatar
-router.put('/profile', updateBioAvatar);
-// password chnage karn ahai 
-router.post("/change-password", authenticateToken, changePassword);
+// Update user details
+router.put("/", UserController.updateBioAvatar);
+
+// Change user password
+router.put("/password", UserController.changePassword);
 
 export default router;
