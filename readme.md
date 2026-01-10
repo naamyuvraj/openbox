@@ -1,73 +1,19 @@
-// yeh sara backend routes hain 
-// All protected routes use JWT:
-//   Authorization: Bearer <token>
-// auth: (/api/auth)
-//
-// post /api/auth/register
-//   body:
-//     {
-//       "name": string,
-//       "email": string,
-//       "password": string,
-//       "username"?: string
-//     }
-//
-// post /api/auth/login
-//   body (JSON):
-//     {
-//       "email": string,
-//       "password": string
-//     }
+# OpenBox
 
-//
-// get /api/auth/google
-//
-// get /api/auth/google/callback
+This is my college project for cloud storage. It helps sync projects.
 
-//
-// get /api/auth/profile
-//   headers: Authorization: Bearer <token>
-//
-// repos (/projects)
-//
-// post /projects
-//   Body (JSON):
-//     {
-//       "name": string,
-//       "description"?: string
-//     }
-//
-// get /projects
-//   Returns all projects of the logged‑in user.
+## Features
+- Upload project files
+- Sync with dashboard
+- Google Login
+- View active projects
 
-//
-// get /projects/:id
-//   Returns single project by id.
+## Tech Stack
+- Frontend: Next.js, React, Tailwind
+- Backend: Node.js, Express, MongoDB
 
-//
-// post /projects/collaborators/:id
-//   Body (JSON):
-//     {
-//       "collaboratorId": string   // user _id
-//     }
+## How to run
+1. cd backend && npm install && npm start
+2. cd frontend && npm install && npm run dev
 
-//
-// profile (/user)
-// get /user/profile
-//
-//
-// files (/api/files)
-//
-// get /api/files/:id
-//
-// get /api/files/:id/history
-//   Response:
-//     { "commits": CommitDocument[] }
-//
-// COMMITS & ZIP UPLOAD (/api/commits)
-//
-// post /api/commits
-//
-// get /api/commits/:id
-//
-// get /api/commits/repo/:repoId
+Hope you like it!
