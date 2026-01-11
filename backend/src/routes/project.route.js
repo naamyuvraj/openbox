@@ -1,65 +1,22 @@
 import express from "express";
 import multer from "multer";
-import { authenticateToken } from "../middlewares/auth.middleware.js";
-import { getSingleFile, commitFileChange } from "../controllers/file.controller.js";
-
-import {
-  createProject,
-  getUserProjects,
-  getProjectById,
-  addCollaborator,
-  getProjectDetails,
-  updateProjectDescription,
-  deleteProject,
-} from "../controllers/project.controller.js";
-
-import {
-  commitChangesFromZip, 
-} from "../controllers/commit.controller.js";
+import extractAndUpload from "../controllers/file.controller.js";
+import ProjectController from "../controllers/project.controller.js";
+import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
+const upload = multer({ dest: "uploads/" });
 
-router.use(authenticateToken);
+// Use auth middleware
+router.use(protect);
 
-// Setup multer (memory storage for ZIP)
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-// -------------------------------
-// CREATE PROJECT (normal)
-// -------------------------------
-router.post("/", createProject);
-
-// -------------------------------
-// UPLOAD ZIP → CREATE PROJECT + INITIAL COMMIT
-// -------------------------------
-router.post(
-  "/upload",
-  upload.single("projectZip"),
-  authenticateToken,
-  commitChangesFromZip
-);
-
-// -------------------------------
-// GET USER PROJECTS
-// -------------------------------
-router.get("/", getUserProjects);
-
-// -------------------------------
-// GET SINGLE PROJECT
-// -------------------------------
-router.get("/:id", getProjectById);
-router.get("/:id/details", authenticateToken, getProjectDetails);
-router.patch("/:id/description", updateProjectDescription);
-router.get("/file/:fileId", authenticateToken, getSingleFile);
-router.post("/file/:fileId/commit", authenticateToken, commitFileChange);
-
-router.delete("/:id", deleteProject);
-
-
-// -------------------------------
-// ADD COLLABORATOR
-// -------------------------------
-router.post("/collaborators/:id", addCollaborator);
+// Routes
+router.post("/upload", upload.single("projectZip"), extractAndUpload);
+router.get("/", ProjectController.getUserProjects);
+router.post("/", ProjectController.createProject);
+router.get("/:id", ProjectController.getProjectDetails);
+router.put("/:id/description", ProjectController.updateProjectDescription);
+router.post("/:id/collaborator", ProjectController.addCollaborator);
+router.delete("/:id", ProjectController.deleteProject);
 
 export default router;
