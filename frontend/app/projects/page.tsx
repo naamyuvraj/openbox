@@ -146,7 +146,8 @@ export default function ProjectsPage() {
           setIsCreatingProject(false);
           setProjectName("");
           setFolderFiles(null);
-          load();
+          load();          return;
+        }
       alert(data.error || data.message || "Upload failed");
     } catch (err) {
       console.error("Upload error", err);
@@ -383,6 +384,9 @@ export default function ProjectsPage() {
                               })}
                             </div>
                           </div>
+
+                          <Button
+                            variant="outline"
                           size="sm"
                           className="gap-2 font-semibold bg-transparent"
                         >
