@@ -1,28 +1,17 @@
 import express from "express";
-import {
-  commitChanges,
-  getCommit,
-  getAllCommits,
-  getDiffBetweenVersions,
-  commitSingleFile,
-} from "../controllers/commit.controller.js";
+import multer from "multer";
+import CommitController from "../controllers/commit.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
-import { upload } from "../middlewares/multer.middleware.js";
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(authenticateToken);
 
-// fisrt zip upload 
-router.post("/", upload.single("folder"), commitChanges);
+// Create standard commit
+router.post("/", CommitController.commitFiles.bind(CommitController));
 
-router.get("/diff", getDiffBetweenVersions);
-// Get a single comit
-router.get("/:id", getCommit);
-
-// et all commits of a repo
-router.get("/repo/:repoId", getAllCommits);
-
-router.post("/file/:fileId", commitSingleFile);
+// Create from Zip
+router.post("/zip", upload.single("projectZip"), CommitController.commitChangesFromZip.bind(CommitController));
 
 export default router;

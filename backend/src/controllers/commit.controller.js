@@ -1,425 +1,174 @@
-import File from "../models/file.model.js";
-import Commit from "../models/commit.model.js";
-import Project from "../models/repo.model.js";
-import AdmZip from "adm-zip";
+import unzipper from "unzipper";
 import DiffMatchPatch from "diff-match-patch";
+import Commit from "../models/commit.model.js";
+import File from "../models/file.model.js";
+import Project from "../models/repo.model.js";
 
-// ==============================
-// Commit changes / upload ZIP
-// ==============================
-export const commitChanges = async (req, res) => {
-  try {
-    const {
-      repo_id,
-      repo_name,
-      repo_description,
-      project_name,
-      description,
-      changes,
-      commit_title,
-      message,
-    } = req.body;
-    const user_id = req.user.id;
+const dmp = new DiffMatchPatch();
 
-    let activeRepoId = repo_id;
-    let newlyCreatedRepo = null;
+class CommitController {
+  // Extract zip array
+  async extractZipInMemory(buffer) {
+    const directory = await unzipper.Open.buffer(buffer);
+    const files = [];
 
-    const deriveRepoName = () => {
-      if (repo_name && repo_name.trim()) return repo_name.trim();
-      if (project_name && project_name.trim()) return project_name.trim();
-      if (req.file?.originalname) {
-        return req.file.originalname.replace(/\.zip$/i, "").trim();
-      }
-      return "";
-    };
-
-    if (!activeRepoId) {
-      const inferredName = deriveRepoName();
-
-      if (!inferredName) {
-        return res.status(400).json({
-          message:
-            "repo_id missing. Provide repo_name/project_name or upload a folder with a valid name.",
+    for (const entry of directory.files) {
+      const path = entry.path;
+      if (entry.type === "File" && !path.includes("__MACOSX") && !path.includes(".DS_Store")) {
+        const buffer = await entry.buffer();
+        files.push({
+          path,
+          content: buffer.toString("utf8"), // Assuming text files for code
         });
       }
+    }
+    return files;
+  }
 
-      newlyCreatedRepo = new Project({
-        name: inferredName,
-        description:
-          repo_description ||
-          description ||
-          `Imported from ${req.file?.originalname || "folder upload"}`,
+  // Upload ZIP files
+  async commitChangesFromZip(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Missing ZIP file" });
+      }
+
+      const { project_name, commit_message } = req.body;
+      const user_id = req.user.id;
+
+      if (!project_name) {
+        return res.status(400).json({ error: "Need project name" });
+      }
+
+      // Step 1. Parse ZIP
+      const extractedFiles = await this.extractZipInMemory(req.file.buffer);
+      if (extractedFiles.length === 0) {
+        return res.status(400).json({ error: "ZIP is empty" });
+      }
+
+      // Step 2. Create Project
+      const project = await Project.create({
+        name: project_name,
         user_id,
       });
 
-      await newlyCreatedRepo.save();
-      activeRepoId = newlyCreatedRepo._id.toString();
-    }
-
-    const commitFiles = [];
-    const dmp = new DiffMatchPatch();
-
-    // ======== Handle ZIP upload ========
-    if (req.file) {
-      const zip = new AdmZip(req.file.buffer);
-      const zipEntries = zip.getEntries();
-
-      for (const entry of zipEntries) {
-        if (entry.isDirectory) continue;
-        if (
-          entry.entryName.startsWith("__MACOSX/") ||
-          entry.name.startsWith("._")
-        )
-          continue;
-
-        const content = entry.getData().toString("utf-8");
-        const file_path = entry.entryName;
-        const file_name = entry.name;
-
-        let file = await File.findOne({ repo_id: activeRepoId, file_path });
-        let oldContent = "";
-
-        if (!file) {
-          file = new File({
-            repo_id: activeRepoId,
-            user_id,
-            file_name,
-            file_path,
-            latest_content: content,
+      // Step 3. Create Files
+      const fileObjects = await Promise.all(
+        extractedFiles.map(async (f) => {
+          const newFile = await File.create({
+            repo_id: project._id,
+            file_name: f.path.split("/").pop(),
+            file_path: f.path,
             latest_version: 1,
+            latest_content: f.content,
           });
-          await file.save();
-        } else {
-          oldContent = file.latest_content;
-          file.latest_content = content;
-          file.latest_version += 1;
-          file.user_id = user_id;
-          await file.save();
-        }
+          return {
+            file_id: newFile._id,
+            file_name: newFile.file_name,
+            file_path: newFile.file_path,
+            version: 1,
+            content: f.content,
+            diff: "Initial commit",
+          };
+        })
+      );
 
-        const diffs = dmp.diff_main(oldContent, content);
-        dmp.diff_cleanupSemantic(diffs);
-        const diffHTML = oldContent === "" ? "" : dmp.diff_prettyHtml(diffs);
-
-        commitFiles.push({
-          file_id: file._id,
-          file_name: file.file_name,
-          file_path: file.file_path,
-          version: file.latest_version,
-          content: file.latest_content,
-          diff: diffHTML, // Store diff directly
-        });
-      }
-    }
-
-    // ======== Handle manual changes array ========
-    if (changes && changes.length > 0) {
-      for (const c of changes) {
-        let file = await File.findOne({
-          repo_id: activeRepoId,
-          file_path: c.file_path,
-        });
-
-        let oldContent = "";
-
-        if (!file) {
-          file = new File({
-            repo_id: activeRepoId,
-            user_id,
-            file_name: c.file_name,
-            file_path: c.file_path,
-            latest_content: c.content,
-            latest_version: 1,
-          });
-          await file.save();
-        } else {
-          oldContent = file.latest_content;
-          file.latest_content = c.content;
-          file.latest_version += 1;
-          file.user_id = user_id;
-          await file.save();
-        }
-
-        const diffs = dmp.diff_main(oldContent, c.content);
-        dmp.diff_cleanupSemantic(diffs);
-        const diffHTML = oldContent === "" ? "" : dmp.diff_prettyHtml(diffs);
-
-        commitFiles.push({
-          file_id: file._id,
-          file_name: file.file_name,
-          file_path: file.file_path,
-          version: file.latest_version,
-          content: file.latest_content,
-          diff: diffHTML,
-        });
-      }
-    }
-
-    if (commitFiles.length === 0)
-      return res
-        .status(400)
-        .json({ message: "No file changes or ZIP provided" });
-
-    // ======== Create commit ========
-    const newCommit = new Commit({
-      repo_id: activeRepoId,
-      user_id,
-      commit_title: commit_title || "Updated files",
-      message: message || "",
-      files: commitFiles, // already has diff
-    });
-
-    await newCommit.save();
-
-    // Update all files to point to this commit
-    for (const f of commitFiles) {
-      await File.findByIdAndUpdate(f.file_id, { commit_id: newCommit._id });
-    }
-
-    return res.status(201).json({
-      message: "Commit created successfully",
-      commit: newCommit,
-      repo: newlyCreatedRepo,
-    });
-  } catch (err) {
-    console.error("[COMMIT ERROR]", err);
-    return res.status(500).json({ error: err.message });
-  }
-};
-
-
-// ==============================
-// Get single commit
-// ==============================
-export const getCommit = async (req, res) => {
-  try {
-    const commit = await Commit.findById(req.params.id);
-    if (!commit) return res.status(404).json({ message: "Commit not found" });
-    return res.status(200).json({ commit });
-  } catch (err) {
-    console.error("[GET COMMIT ERROR]", err);
-    return res.status(500).json({ error: err.message });
-  }
-};
-
-// ==============================
-// Get all commits for a repo
-// ==============================
-export const getAllCommits = async (req, res) => {
-  try {
-    const { repoId } = req.params;
-    const commits = await Commit.find({ repo_id: repoId }).sort({
-      createdAt: -1,
-    });
-    return res.status(200).json({ commits });
-  } catch (err) {
-    console.error("[GET ALL COMMITS ERROR]", err);
-    return res.status(500).json({ error: err.message });
-  }
-};
-
-
-
-
-export const commitChangesFromZip = async (req, res) => {
-  try {
-    const user_id = req.user.id;
-    const zipFile = req.file;
-
-    if (!zipFile) {
-      return res.status(400).json({ message: "ZIP file missing" });
-    }
-
-    const zip = new AdmZip(zipFile.buffer);
-    const entries = zip.getEntries();
-
-    if (!entries.length) {
-      return res.status(400).json({ message: "ZIP is empty" });
-    }
-
-    // Determine project name
-    let projectName = req.body.project_name;
-    if (!projectName || projectName.trim().length === 0) {
-      projectName = zipFile.originalname.replace(/\.zip$/i, "");
-    }
-    projectName = projectName.trim();
-
-    // Create project
-    const project = new Project({
-      name: projectName,
-      description: req.body.description || "Imported project",
-      user_id,
-    });
-    await project.save();
-
-    const commitFiles = [];
-    const dmp = new DiffMatchPatch();
-
-    // Process files
-    for (const entry of entries) {
-      if (entry.isDirectory) continue;
-      if (
-        entry.entryName.startsWith("__MACOSX/") ||
-        entry.name.startsWith("._")
-      )
-        continue;
-
-      const content = entry.getData().toString("utf-8");
-
-      // Save file
-      const file = new File({
+      // Step 4. Create Commit
+      const commit = await Commit.create({
         repo_id: project._id,
         user_id,
-        file_name: entry.name,
-        file_path: entry.entryName,
-        latest_content: content,
-        latest_version: 1,
+        commit_title: "Initial Commit via ZIP",
+        message: commit_message || "Uploaded starting project files",
+        files: fileObjects,
       });
-      await file.save();
 
-      // Compute diff (empty for initial commit)
-      const diffHTML = "";
+      // Step 5. Link files to commit
+      await File.updateMany(
+        { repo_id: project._id },
+        { $set: { commit_id: commit._id } }
+      );
 
-      commitFiles.push({
-        file_id: file._id,
-        file_name: file.file_name,
-        file_path: file.file_path,
-        version: file.latest_version,
-        content: file.latest_content,
-        diff: diffHTML,
+      res.status(201).json({
+        message: "Successfully uploaded",
+        project,
+        commit,
       });
+    } catch (err) {
+      console.error("ZIP Upload error:", err);
+      res.status(500).json({ error: err.message });
     }
-
-    // Create commit with diffs
-    const commit = new Commit({
-      repo_id: project._id,
-      user_id,
-      commit_title: "Initial import",
-      message: "",
-      files: commitFiles, // now contains diff field
-    });
-    await commit.save();
-
-    // Associate commit_id with files
-    for (const f of commitFiles) {
-      await File.findByIdAndUpdate(f.file_id, { commit_id: commit._id });
-    }
-
-    return res.status(201).json({
-      message: "Project imported successfully",
-      project,
-      commit,
-    });
-  } catch (err) {
-    console.error("[ZIP UPLOAD ERROR]", err);
-    res.status(500).json({ error: err.message });
   }
-};
 
-export const getDiffBetweenVersions = async (req, res) => {
-  try {
-    const { repoId, file_path, fromVersion, toVersion } = req.query;
+  // Handle single file commits
+  async commitFiles(req, res) {
+    try {
+      const { repo_id, commit_title, message, files } = req.body;
+      const user_id = req.user.id;
 
-    if (!repoId || !file_path || !fromVersion || !toVersion) {
-      return res.status(400).json({ message: "Missing query parameters" });
+      if (!files || !files.length) {
+        return res.status(400).json({ error: "No files" });
+      }
+
+      let processedFiles = [];
+      for (const f of files) {
+        let existingFile = await File.findOne({
+          repo_id,
+          file_path: f.file_path,
+        });
+
+        let oldContent = "";
+        let version = 1;
+
+        if (existingFile) {
+          oldContent = existingFile.latest_content || "";
+          version = existingFile.latest_version + 1;
+        } else {
+          existingFile = new File({
+            repo_id,
+            file_name: f.file_name,
+            file_path: f.file_path,
+            commit_id: null,
+          });
+        }
+
+        const patches = dmp.patch_make(oldContent, f.content);
+        const diff = dmp.patch_toText(patches);
+
+        existingFile.latest_version = version;
+        existingFile.latest_content = f.content;
+        await existingFile.save();
+
+        processedFiles.push({
+          file_id: existingFile._id,
+          file_name: f.file_name,
+          file_path: f.file_path,
+          version,
+          content: f.content,
+          diff,
+        });
+      }
+
+      const commit = new Commit({
+        repo_id,
+        user_id,
+        commit_title,
+        message,
+        files: processedFiles,
+      });
+      await commit.save();
+
+      // Fix file relations
+      for (const pf of processedFiles) {
+        await File.findByIdAndUpdate(pf.file_id, { commit_id: commit._id });
+      }
+
+      res.status(201).json({
+        message: "Commit successful",
+        commit,
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-
-    const fromVer = parseInt(fromVersion);
-    const toVer = parseInt(toVersion);
-
-    // Find commits containing the file at the specified versions
-    const fromCommit = await Commit.findOne({
-      repo_id: repoId,
-      "files.file_path": file_path,
-      "files.version": fromVer,
-    });
-
-    const toCommit = await Commit.findOne({
-      repo_id: repoId,
-      "files.file_path": file_path,
-      "files.version": toVer,
-    });
-
-    if (!fromCommit || !toCommit) {
-      return res.status(404).json({ message: "File versions not found" });
-    }
-
-    const fromFile = fromCommit.files.find((f) => f.file_path === file_path);
-    const toFile = toCommit.files.find((f) => f.file_path === file_path);
-
-    const dmp = new DiffMatchPatch();
-    const diffs = dmp.diff_main(fromFile.content, toFile.content);
-    dmp.diff_cleanupSemantic(diffs);
-
-    const diffHTML = dmp.diff_prettyHtml(diffs);
-
-    return res.status(200).json({
-      file_path,
-      fromVersion: fromVer,
-      toVersion: toVer,
-      diff: diffHTML,
-    });
-  } catch (err) {
-    console.error("[DIFF ERROR]", err);
-    return res.status(500).json({ error: err.message });
   }
-};
+}
 
-// Commit changes for a single file
-export const commitSingleFile = async (req, res) => {
-  try {
-    const { fileId } = req.params;
-    const { new_content, message, project_id } = req.body;
-    const user_id = req.user.id;
-
-    if (!new_content) {
-      return res.status(400).json({ message: "New content is required" });
-    }
-
-    const file = await File.findById(fileId);
-    if (!file) return res.status(404).json({ message: "File not found" });
-
-    const dmp = new DiffMatchPatch();
-    const oldContent = file.latest_content || "";
-
-    // Update file
-    file.latest_content = new_content;
-    file.latest_version += 1;
-    file.user_id = user_id;
-    await file.save();
-
-    // Compute diff
-    const diffs = dmp.diff_main(oldContent, new_content);
-    dmp.diff_cleanupSemantic(diffs);
-    const diffHTML = oldContent === "" ? "" : dmp.diff_prettyHtml(diffs);
-
-    // Create commit
-    const commit = new Commit({
-      repo_id: project_id || file.repo_id,
-      user_id,
-      commit_title: "Updated " + file.file_name,
-      message: message || "",
-      files: [
-        {
-          file_id: file._id,
-          file_name: file.file_name,
-          file_path: file.file_path,
-          version: file.latest_version,
-          content: file.latest_content,
-          diff: diffHTML,
-        },
-      ],
-    });
-
-    await commit.save();
-
-    // Associate commit with file
-    file.commit_id = commit._id;
-    await file.save();
-
-    return res.status(201).json({ message: "Commit created", commit });
-  } catch (err) {
-    console.error("[SINGLE FILE COMMIT ERROR]", err);
-    return res.status(500).json({ error: err.message });
-  }
-};
+export default new CommitController();
