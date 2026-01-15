@@ -3,13 +3,21 @@ import AuthController from "../controllers/auth.controller.js";
 
 const router = express.Router();
 
-// Google login route
-router.get("/google", AuthController.googleAuth);
+// Google login
+router.get("/google", AuthController.googleAuth.bind(AuthController));
 
-// Callback after login
-router.get("/google/callback", AuthController.googleCallback);
+// Google callback
+router.get("/google/callback", AuthController.googleCallback.bind(AuthController));
 
-// Logout user route
-router.get("/logout", AuthController.logout);
+// Simple logout
+router.get("/logout", AuthController.logout.bind(AuthController));
+
+// Token check
+router.get("/verify", (req, res) => {
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return res.json({ authenticated: true, user: req.user });
+  }
+  return res.status(401).json({ authenticated: false });
+});
 
 export default router;

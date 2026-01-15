@@ -1,13 +1,13 @@
 import express from "express";
-import { getFileById, getFileHistory } from "../controllers/file.controller.js";
+import FileController from "../controllers/file.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 router.use(authenticateToken);
 
-// Read-only operations
-router.get("/:id", getFileById);
-router.get("/:id/history", getFileHistory);
+// Read file info
+router.get("/:id", FileController.getFileById.bind(FileController));
+router.get("/:id/history", FileController.getFileHistory.bind(FileController));
 
 export default router;
