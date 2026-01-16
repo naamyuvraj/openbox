@@ -1,11 +1,11 @@
 import express from "express";
 import UserController from "../controllers/user.controller.js";
-import { protect } from "../middlewares/auth.middleware.js";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// protect routes inside
-router.use(protect);
+// authenticateToken routes inside
+router.use(authenticateToken);
 
 // Get user profile
 router.get("/", UserController.getProfile);
