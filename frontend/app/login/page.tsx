@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Mail, Eye, EyeOff } from "lucide-react";
 
-// API calls
+// api idhar se ayega
 import { login, googleLogin } from "../service/app";
 
 function LoginForm() {
@@ -31,9 +31,9 @@ function LoginForm() {
     }
   }, [searchParams, router]);
 
-  // --------------------------
-  // EMAIL / PASSWORD LOGIN
-  // --------------------------
+  // ---
+  // normal login form
+  // ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -54,9 +54,9 @@ function LoginForm() {
     }
   };
 
-  // --------------------------
-  // GOOGLE OAUTH LOGIN
-  // --------------------------
+  // ---
+  // google wala login
+  // ---
   const handleGoogleOAuth = () => {
     setIsLoading(true);
     googleLogin(); // Redirects to backend Google OAuth route
@@ -65,7 +65,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
 
-      {/* LEFT SIDE */}
+      {/* left ka hissa */}
       <div className="hidden md:flex md:w-1/2 bg-foreground text-background flex-col justify-center items-center p-12">
         <div className="max-w-md space-y-8">
           <div className="flex items-center gap-3">
@@ -84,7 +84,7 @@ function LoginForm() {
         </div>
       </div>
 
-      {/* RIGHT SIDE (FORM) */}
+      {/* form idhar hai */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-foreground/20">
           <CardHeader>
@@ -94,10 +94,10 @@ function LoginForm() {
 
           <CardContent className="space-y-6">
 
-            {/* ERROR */}
+            {/* error message aya toh */}
             {error && <p className="text-red-500 text-center text-sm">{error}</p>}
 
-            {/* GOOGLE BUTTON */}
+            {/* google button hai */}
             <Button
               type="button"
               variant="outline"
@@ -109,7 +109,7 @@ function LoginForm() {
               Continue with Google
             </Button>
 
-            {/* DIVIDER */}
+            {/* line banaya beech mein */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border" />
@@ -119,7 +119,7 @@ function LoginForm() {
               </div>
             </div>
 
-            {/* EMAIL / PASSWORD FORM */}
+            {/* actual form shuru */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -165,7 +165,7 @@ function LoginForm() {
               </Button>
             </form>
 
-            {/* FOOTER */}
+            {/* neeche ka part */}
             <div className="text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>
               <Link href="/signup" className="font-bold hover:underline">Sign up</Link>
