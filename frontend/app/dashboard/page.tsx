@@ -40,6 +40,7 @@ interface Project {
   items?: ProjectItem[]
 }
 
+// dashboard page ka start function
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -56,6 +57,7 @@ export default function DashboardPage() {
     fetchProjects()
   }, [])
 
+  // ab server se project laenge
   const fetchProjects = async () => {
     try {
       setIsLoading(true)
@@ -70,12 +72,14 @@ export default function DashboardPage() {
     }
   }
 
+  // search aur filter ka code
   const filtered = projects.filter(
     (p) =>
       p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
+  // function: naya project banaya jayega
   const handleCreateProject = async () => {
     if (newProject.name.trim()) {
       try {
@@ -89,6 +93,7 @@ export default function DashboardPage() {
     }
   }
 
+  // file upload wala scene
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files && selectedProjectId) {
@@ -157,6 +162,7 @@ export default function DashboardPage() {
     )
   }
 
+  // html ui render hua idhar
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">

@@ -13,6 +13,7 @@ import { Mail, Eye, EyeOff } from "lucide-react";
 // api idhar se ayega
 import { login, googleLogin } from "../service/app";
 
+// yeh login form ka logic
 function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -34,6 +35,7 @@ function LoginForm() {
   // ---
   // normal login form
   // ---
+  // form jama karo submit karke
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -57,6 +59,7 @@ function LoginForm() {
   // ---
   // google wala login
   // ---
+  // google se login wala jugad
   const handleGoogleOAuth = () => {
     setIsLoading(true);
     googleLogin(); // Redirects to backend Google OAuth route
