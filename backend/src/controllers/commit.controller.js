@@ -56,6 +56,7 @@ class CommitController {
         extractedFiles.map(async (f) => {
           const newFile = await File.create({
             repo_id: project._id,
+            user_id,
             file_name: f.path.split("/").pop(),
             file_path: f.path,
             latest_version: 1,
@@ -124,6 +125,7 @@ class CommitController {
         } else {
           existingFile = new File({
             repo_id,
+            user_id,
             file_name: f.file_name,
             file_path: f.file_path,
             commit_id: null,
