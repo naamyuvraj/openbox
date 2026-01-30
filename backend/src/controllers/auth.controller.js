@@ -9,9 +9,13 @@ class AuthController {
 
   // Google callback handler
   googleCallback(req, res, next) {
+    const defaultRedirect = process.env.NODE_ENV === "production"
+      ? "https://openbox-dev4ce.vercel.app/dashboard"
+      : "http://localhost:3000/dashboard";
+
     passport.authenticate("google", {
       failureRedirect: "/login",
-      successRedirect: process.env.FRONTEND_URL || "http://localhost:3000/dashboard",
+      successRedirect: process.env.FRONTEND_URL || defaultRedirect,
     })(req, res, next);
   }
 
@@ -19,7 +23,12 @@ class AuthController {
   logout(req, res) {
     req.logout((err) => {
       if (err) return next(err);
-      res.redirect(process.env.FRONTEND_URL || "http://localhost:3000/");
+      
+      const defaultLogout = process.env.NODE_ENV === "production"
+        ? "https://openbox-dev4ce.vercel.app/"
+        : "http://localhost:3000/";
+        
+      res.redirect(process.env.FRONTEND_URL || defaultLogout);
     });
   }
 }
