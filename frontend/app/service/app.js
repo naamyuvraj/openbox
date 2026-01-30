@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://openbox-r8z3.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://openbox-0tuh.onrender.com';
 
 function getAuthToken() {
   if (typeof window !== 'undefined') {
