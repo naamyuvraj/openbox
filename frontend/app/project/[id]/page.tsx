@@ -70,18 +70,21 @@ export default function ProjectPage() {
   const grouped = groupFiles(files);
 
   if (loading)
-    return (
+    // ui yahan ban raha hai
+  return (
       <AppLayout>
         <div className="p-10 text-muted-foreground">Loading...</div>
       </AppLayout>
     );
   if (!project)
-    return (
+    // ui yahan ban raha hai
+  return (
       <AppLayout>
         <div className="p-10 text-red-400">Project not found</div>
       </AppLayout>
     );
 
+  // ui yahan ban raha hai
   return (
     <AppLayout>
       <div className="min-h-screen bg-background">
