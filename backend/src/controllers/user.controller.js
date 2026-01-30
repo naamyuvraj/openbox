@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
+import Commit from "../models/commit.model.js";
 
 // User controller class
 class UserController {
@@ -9,6 +10,37 @@ class UserController {
       const user = await User.findById(req.user.id).select("-password -_id -__v -googleId");
       if (!user) return res.status(404).json({ message: "Not found" });
       res.status(200).json({ user });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  // Get user recent activity
+  async getActivity(req, res) {
+    try {
+      // Find latest 20 commits by the user or on user's projects
+      // For simplicity, let's fetch user's own commits
+      const commits = await Commit.find({ user_id: req.user.id })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .populate("repo_id", "name")
+        .populate("user_id", "name avatarUrl");
+      
+      const activity = commits.map(c => {
+        return {
+          id: c._id,
+          action: "Committed changes",
+          actor: c.user_id?.name || "Unknown User",
+          target: c.repo_id?.name || "Unknown Project",
+          timestamp: c.createdAt,
+          type: "update",
+          avatar: c.user_id?.avatarUrl || "",
+          projectId: c.repo_id?._id || "",
+          message: c.message
+        };
+      });
+
+      res.status(200).json({ activity });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

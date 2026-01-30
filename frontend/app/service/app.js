@@ -213,7 +213,7 @@ export async function getUserProfile() {
   try {
     const token = getAuthToken();
 
-    const response = await fetch(`${API_BASE_URL}/user/profile`, {
+    const response = await fetch(`${API_BASE_URL}/user`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -230,6 +230,31 @@ export async function getUserProfile() {
     return data;
   } catch (error) {
     console.error('Error getting user profile:', error);
+    throw error;
+  }
+}
+
+export async function getUserActivity() {
+  try {
+    const token = getAuthToken();
+
+    const response = await fetch(`${API_BASE_URL}/user/activity`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch activity");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error getting user activity:", error);
     throw error;
   }
 }

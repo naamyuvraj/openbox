@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -19,13 +19,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { getUserActivity } from "../service/app"
 
 interface ActivityLog {
   id: string
   action: string
   actor: string
   target: string
-  timestamp: Date
+  timestamp: Date | string
   type: "create" | "update" | "delete" | "comment"
   avatar: string
   projectId: string
@@ -107,9 +108,29 @@ const getActionBadgeVariant = (type: ActivityLog["type"]) => {
 }
 
 export default function ActivityPage() {
-  const [activities] = useState(mockActivity)
+  const [activities, setActivities] = useState<ActivityLog[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
   const [filterType, setFilterType] = useState<"all" | ActivityLog["type"]>("all")
   const [searchQuery, setSearchQuery] = useState("")
+
+  useEffect(() => {
+    async function loadActivity() {
+      try {
+        setLoading(true)
+        const res = await getUserActivity()
+        setActivities(res.activity || [])
+        setError(null)
+      } catch (err: any) {
+        setError(err.message || "Failed to load activity logs")
+        setActivities(mockActivity) // Fallback to mock on error
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadActivity()
+  }, [])
 
   const filtered = activities.filter((a) => {
     const matchesSearch =
@@ -236,7 +257,7 @@ export default function ActivityPage() {
                             </div>
 
                             <div className="text-xs text-muted-foreground flex-shrink-0 ml-4">
-                              {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                              {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
                             </div>
                           </CardContent>
                         </Card>
