@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Commit from "../models/commit.model.js";
 
@@ -7,9 +8,21 @@ class UserController {
   // Get user profile
   async getProfile(req, res) {
     try {
-      const user = await User.findById(req.user.id).select("-password -_id -__v -googleId");
+      const user = await User.findById(req.user.id).select("-password -_id -__v -googleId").lean();
       if (!user) return res.status(404).json({ message: "Not found" });
-      res.status(200).json({ user });
+
+      const totalCommits = await Commit.countDocuments({ user_id: req.user.id });
+      
+      const objectId = new mongoose.Types.ObjectId(req.user.id);
+      
+      const changesAgg = await Commit.aggregate([
+        { $match: { user_id: objectId } },
+        { $project: { _id: 0, filesCount: { $size: { $ifNull: ["$files", []] } } } },
+        { $group: { _id: null, totalChanges: { $sum: "$filesCount" } } }
+      ]);
+      const totalChanges = changesAgg.length > 0 ? changesAgg[0].totalChanges : 0;
+
+      res.status(200).json({ user: { ...user, totalCommits, totalChanges } });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -49,12 +62,14 @@ class UserController {
   // Update bio or avatar
   async updateBioAvatar(req, res) {
     try {
-      const { bio, avatarUrl } = req.body;
+      const { bio, avatarUrl, name } = req.body;
       const user = await User.findById(req.user.id);
       if (!user) return res.status(404).json({ message: "Not found" });
 
-      user.bio = bio || user.bio;
+      user.name = name || user.name;
+      user.bio = bio !== undefined ? bio : user.bio;
       user.avatarUrl = avatarUrl || user.avatarUrl;
+      
       await user.save();
       res.status(200).json({ user });
     } catch (err) {

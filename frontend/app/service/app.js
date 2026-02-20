@@ -263,7 +263,7 @@ export async function updateUserProfile(profileData) {
   try {
     const token = getAuthToken();
 
-    const response = await fetch(`${API_BASE_URL}/user/profile`, {
+    const response = await fetch(`${API_BASE_URL}/user`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
