@@ -14,31 +14,26 @@ const CommitFileSchema = new Schema(
       type: String,
       required: true,
     },
-
     file_path: {
       type: String,
       required: true,
     },
-
-    // version of the file at the time of this commit
     version: {
       type: Number,
       required: true,
     },
 
-    // full snapshot of the file content at this commit
     content: {
       type: String,
       required: true,
     },
 
-    // optional diff/patch (e.g. DiffMatchPatch patch string)
     diff: {
       type: String,
       default: "",
     },
   },
-  { _id: false } // prevent Mongoose from creating an _id for each sub-doc (optional)
+  { _id: false } 
 );
 
 const CommitSchema = new Schema(
@@ -65,14 +60,13 @@ const CommitSchema = new Schema(
       default: "",
     },
 
-    // array of changed file snapshots
     files: {
       type: [CommitFileSchema],
       default: [],
     },
   },
   {
-    timestamps: true, // adds createdAt and updatedAt
+    timestamps: true, 
   }
 );
 

@@ -34,11 +34,9 @@ export const deleteProject = async (req, res) => {
     if (!project) {
       return res.status(404).json({ message: "Project not found or unauthorized" });
     }
-
+    
     await File.deleteMany({ repo_id: id });
-
     await Commit.deleteMany({ repo_id: id });
-
     await Project.findByIdAndDelete(id);
 
     return res.status(200).json({ message: "Project deleted successfully" });
@@ -46,9 +44,13 @@ export const deleteProject = async (req, res) => {
     console.error("Delete project error:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
   }
-};
+}
 
+// pehla option i can recheck all the commits and projects where file is not the same with commitid and projectid and delete it but expensive hai
+// dusra option i can do something like logs that will be stored in client side and when network comes again then i will delete the remaing part
+// third ki when asa delete half half ho toh then i will rollback the whole deletion?
 
+// sir ne Transactions bola
 export const getProjectDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -59,7 +61,6 @@ export const getProjectDetails = async (req, res) => {
 
     const files = await File.find({ repo_id: id }).sort({ file_path: 1 });
 
-    // Tree formatted
     const fileTree = buildFileTree(files);
 
     const commits = await Commit.find({ repo_id: id })
