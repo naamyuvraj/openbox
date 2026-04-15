@@ -30,25 +30,21 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error("CORS blocked"));
+      return callback(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
-app.options("*", cors());
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") return res.sendStatus(200);
-  next();
-});
+app.options(/.*/, cors());
 app.use(express.json());
 
 // session for passport oauth
@@ -80,7 +76,7 @@ app.use("/api/files", fileRoutes);
 app.use("/api/commits", commitRoutes);
 app.use("/api/collaboration", collaborationRoutes);
 
-//  public route with auth needed for testing
+// test routes
 app.get("/ping", (req, res) => res.send("pong"));
 app.get("/", (req, res) => {
   res.send("Server chal rha hain!");
