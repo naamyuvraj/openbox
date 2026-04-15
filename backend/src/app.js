@@ -20,21 +20,35 @@ const app = express();
 // =====================
 // CORS 
 // =====================
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5170",
+  "https://openbox-dashboard.vercel.app",
+  "https://openbox-dev4ce.vercel.app",
+  "https://openbox-proj.vercel.app"
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",          
-      "http://localhost:5170",          
-      "https://openbox-dashboard.vercel.app", 
-      "https://openbox-dev4ce.vercel.app",
-      "https://openbox-proj.vercel.app"
-    ],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS blocked"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 app.options("*", cors());
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+});
 app.use(express.json());
 
 // session for passport oauth
