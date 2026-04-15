@@ -27,14 +27,14 @@ app.use(
       "http://localhost:5170",          
       "https://openbox-dashboard.vercel.app", 
       "https://openbox-dev4ce.vercel.app",
-      "https://openbox-proj.vercel.app/"
+      "https://openbox-proj.vercel.app"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
+app.options("*", cors());
 app.use(express.json());
 
 // session for passport oauth
