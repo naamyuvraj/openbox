@@ -38,7 +38,7 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     session: false,
-    failureRedirect: `${process.env.FRONTEND_URL || "https://openbox-dev4ce.vercel.app"}/login`,
+    failureRedirect: `${process.env.FRONTEND_URL || "https://openbox-proj.vercel.app/"}/login`,
   }),
   async (req, res) => {
     try {
@@ -51,11 +51,11 @@ router.get(
       );
 
       // IMPORTANT: redirect to frontend with token
-      const frontendUrl = process.env.FRONTEND_URL || "https://openbox-dev4ce.vercel.app";
+      const frontendUrl = process.env.FRONTEND_URL || "https://openbox-proj.vercel.app/";
       return res.redirect(`${frontendUrl}/oauth?token=${token}`);
     } catch (err) {
       console.error("OAuth error:", err);
-      const frontendUrl = process.env.FRONTEND_URL || "https://openbox-dev4ce.vercel.app";
+      const frontendUrl = process.env.FRONTEND_URL || "https://openbox-proj.vercel.app/";
       return res.redirect(`${frontendUrl}/login`);
     }
   }

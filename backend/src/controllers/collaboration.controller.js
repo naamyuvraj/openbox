@@ -5,7 +5,6 @@ export const inviteCollaborator = async (req, res) => {
   try {
     const { project_id, inviteeEmail } = req.body;
 
-    // JWT gives: req.user.id, req.user.email, req.user.username (NOT req.user._id)
     const inviter_id = req.user.id;
     const inviter_name = req.user.name || req.user.username || req.user.email;
 

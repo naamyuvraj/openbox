@@ -18,7 +18,7 @@ cron.schedule("*/12 * * * *", () => {
 // ==================================
 
 setInterval(() => {
-  axios.get("https://openbox-r8z3.onrender.com/").catch(() => {});
+  axios.get("https://openbox-5vh6.onrender.com").catch(() => {});
 }, 5 * 60 * 1000);
 
 

@@ -72,7 +72,7 @@ export function googleLogin() {
 export async function getAuthProfile() {
   try {
     const token = getAuthToken();
-    console.log("JWT token:", token);
+    // console.log("JWT token:", token);
 
     const response = await fetch(`${API_BASE_URL}/user/profile`, {
       method: "GET",
