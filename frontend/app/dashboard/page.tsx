@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label"
 import { Plus, Search, MoreVertical, Trash2, Edit, ArrowRight, FileText, Folder } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { formatDistanceToNow } from "date-fns"
+import { getUserProjects, createProject } from "../service/app"
 
 interface ProjectItem {
   id: string
@@ -29,53 +30,19 @@ interface ProjectItem {
 }
 
 interface Project {
-  id: string
+  _id: string
   name: string
   description: string
-  owner: string
-  lastUpdated: Date
-  status: "active" | "archived"
-  items: ProjectItem[]
+  owner?: string
+  updatedAt: Date | string
+  createdAt: Date | string
+  status?: "active" | "archived"
+  items?: ProjectItem[]
 }
 
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    name: "OpenBox MVP",
-    description: "Building the initial minimum viable product",
-    owner: "Dev4ce Team",
-    lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    status: "active",
-    items: [
-      { id: "f1", name: "README.md", type: "file" },
-      { id: "f2", name: "src", type: "folder" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Design System V2",
-    description: "Refactoring the component library",
-    owner: "Design Team",
-    lastUpdated: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    status: "active",
-    items: [
-      { id: "f3", name: "components", type: "folder" },
-      { id: "f4", name: "design.tokens.json", type: "file" },
-    ],
-  },
-  {
-    id: "3",
-    name: "API Documentation",
-    description: "Comprehensive API documentation",
-    owner: "Tech Leads",
-    lastUpdated: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    status: "active",
-    items: [],
-  },
-]
-
 export default function DashboardPage() {
-  const [projects, setProjects] = useState(mockProjects)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const [newProject, setNewProject] = useState({ name: "", description: "" })
@@ -85,26 +52,40 @@ export default function DashboardPage() {
   const [newItemType, setNewItemType] = useState<"file" | "folder">("file")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    fetchProjects()
+  }, [])
+
+  const fetchProjects = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getUserProjects()
+      if (data && data.projects) {
+        setProjects(data.projects)
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const filtered = projects.filter(
     (p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (newProject.name.trim()) {
-      const project: Project = {
-        id: Date.now().toString(),
-        name: newProject.name,
-        description: newProject.description,
-        owner: "Current User",
-        lastUpdated: new Date(),
-        status: "active",
-        items: [],
+      try {
+        await createProject({ name: newProject.name, description: newProject.description })
+        setNewProject({ name: "", description: "" })
+        setIsOpen(false)
+        fetchProjects()
+      } catch (error) {
+        console.error('Failed to create project:', error)
       }
-      setProjects([project, ...projects])
-      setNewProject({ name: "", description: "" })
-      setIsOpen(false)
     }
   }
 
@@ -119,10 +100,10 @@ export default function DashboardPage() {
         }
         setProjects((prevProjects) =>
           prevProjects.map((p) =>
-            p.id === selectedProjectId
+            p._id === selectedProjectId
               ? {
                   ...p,
-                  items: [...p.items, newItem],
+                  items: [...(p.items || []), newItem],
                 }
               : p,
           ),
@@ -139,7 +120,7 @@ export default function DashboardPage() {
     if (newItemName.trim() && selectedProjectId) {
       setProjects(
         projects.map((p) =>
-          p.id === selectedProjectId
+          p._id === selectedProjectId
             ? {
                 ...p,
                 items: [
@@ -160,16 +141,16 @@ export default function DashboardPage() {
   }
 
   const handleDeleteProject = (id: string) => {
-    setProjects(projects.filter((p) => p.id !== id))
+    setProjects(projects.filter((p) => p._id !== id))
   }
 
   const handleDeleteItem = (projectId: string, itemId: string) => {
     setProjects(
       projects.map((p) =>
-        p.id === projectId
+        p._id === projectId
           ? {
               ...p,
-              items: p.items.filter((item) => item.id !== itemId),
+              items: (p.items || []).filter((item) => item.id !== itemId),
             }
           : p,
       ),
@@ -266,7 +247,7 @@ export default function DashboardPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.map((project) => (
                 <Card
-                  key={project.id}
+                  key={project._id}
                   className="border-2 hover:border-foreground/50 transition-smooth h-full flex flex-col"
                 >
                   <CardHeader className="pb-3 flex flex-row items-start justify-between space-y-0">
@@ -286,7 +267,7 @@ export default function DashboardPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="gap-2 text-destructive focus:text-destructive"
-                          onClick={() => handleDeleteProject(project.id)}
+                          onClick={() => handleDeleteProject(project._id)}
                         >
                           <Trash2 className="w-4 h-4" />
                           Delete
@@ -298,11 +279,11 @@ export default function DashboardPage() {
                   <CardContent className="space-y-4 flex-1 flex flex-col">
                     <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
 
-                    {project.items.length > 0 && (
+                    {(project.items || []).length > 0 && (
                       <div className="space-y-2 py-3 border-t border-b border-border flex-1">
                         <p className="text-xs font-semibold text-muted-foreground">Contents</p>
                         <div className="space-y-1 max-h-24 overflow-y-auto">
-                          {project.items.map((item) => (
+                          {project.items?.map((item) => (
                             <div
                               key={item.id}
                               className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted group"
@@ -319,7 +300,7 @@ export default function DashboardPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="w-6 h-6 opacity-0 group-hover:opacity-100"
-                                onClick={() => handleDeleteItem(project.id, item.id)}
+                                onClick={() => handleDeleteItem(project._id, item.id)}
                               >
                                 <Trash2 className="w-3 h-3" />
                               </Button>
@@ -332,18 +313,18 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between pt-2 border-t border-border">
                       <span className="text-xs font-medium">{project.owner}</span>
                       <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(project.lastUpdated, { addSuffix: true })}
+                        {formatDistanceToNow(new Date(project.updatedAt || project.createdAt || Date.now()), { addSuffix: true })}
                       </span>
                     </div>
 
                     <div className="flex gap-2">
-                      <Dialog open={showAddItem && selectedProjectId === project.id} onOpenChange={setShowAddItem}>
+                      <Dialog open={showAddItem && selectedProjectId === project._id} onOpenChange={setShowAddItem}>
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
                             className="flex-1 gap-2 font-semibold bg-transparent"
-                            onClick={() => setSelectedProjectId(project.id)}
+                            onClick={() => setSelectedProjectId(project._id)}
                           >
                             <Plus className="w-4 h-4" />
                             Add Item
@@ -392,7 +373,7 @@ export default function DashboardPage() {
                                     if (newItemName.trim()) {
                                       setProjects((prevProjects) =>
                                         prevProjects.map((p) =>
-                                          p.id === selectedProjectId
+                                          p._id === selectedProjectId
                                             ? {
                                                 ...p,
                                                 items: [
@@ -427,7 +408,7 @@ export default function DashboardPage() {
                         </DialogContent>
                       </Dialog>
 
-                      <Link href={`/project/${project.id}`}>
+                      <Link href={`/project/${project._id}`}>
                         <Button variant="outline" size="sm" className="flex-1 gap-2 font-semibold bg-transparent">
                           Open
                           <ArrowRight className="w-3 h-3" />
