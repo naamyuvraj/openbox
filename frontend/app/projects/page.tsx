@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Filter, Calendar, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+import { getUserProjects } from "../service/app"; // ADDED
+
 import {
   Dialog,
   DialogContent,
@@ -50,39 +52,19 @@ export default function ProjectsPage() {
   // ----------------------------
   // FETCH USER PROJECTS
   // ----------------------------
-  useEffect(() => {
-    async function load() {
-      try {
-        const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${BACKEND}/projects`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const text = await res.text();
-        let data: any = {};
-        try {
-          data = JSON.parse(text);
-        } catch {
-          console.error("Invalid JSON returned:", text);
-        }
-
-        if (res.ok) {
-          setProjects(data.projects || []);
-        } else {
-          console.error("Fetch error:", data);
-        }
-      } catch (err) {
-        console.error("Error loading projects:", err);
-      }
-
+  async function load() {
+    try {
+      setLoading(true);
+      const res = await getUserProjects();
+      setProjects(res.projects || []);
+    } catch (err) {
+      console.error("Error loading projects:", err);
+    } finally {
       setLoading(false);
     }
+  }
 
+  useEffect(() => {
     load();
   }, []);
 
@@ -131,42 +113,40 @@ export default function ProjectsPage() {
     formData.append("projectZip", zipBlob, "project.zip");
     formData.append("project_name", projectName);
 
-    const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const token = localStorage.getItem("token");
+      const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5170';
+      const token = localStorage.getItem("token");
 
-    if (!token) {
-      alert("You are not logged in. No token found.");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${BACKEND}/projects/upload`, {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const text = await res.text();
-      let data: any = {};
+      if (!token) {
+        alert("You are not logged in. No token found.");
+        return;
+      }
 
       try {
-        data = JSON.parse(text);
-      } catch {
-        console.error("Server returned non-JSON:", text);
-        alert("Upload failed: server error");
-        return;
-      }
+        const res = await fetch(`${BACKEND}/projects/upload`, {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (res.ok) {
-        console.log("Upload success:", data);
-        setIsCreatingProject(false);
-        window.location.reload();
-        return;
-      }
+        const text = await res.text();
+        let data: any = {};
 
-      console.error("Upload error:", data);
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.error("Server returned non-JSON:", text);
+          alert("Upload failed: server error");
+          return;
+        }
+
+        if (res.ok) {
+          console.log("Upload success:", data);
+          setIsCreatingProject(false);
+          setProjectName("");
+          setFolderFiles(null);
+          load();
       alert(data.error || data.message || "Upload failed");
     } catch (err) {
       console.error("Upload error", err);
@@ -398,14 +378,11 @@ export default function ProjectsPage() {
                           <div className="font-black text-foreground">You</div>
                           <div className="flex items-center gap-1 text-muted-foreground text-xs mt-1">
                             <Calendar className="w-3 h-3" />
-                            {formatDistanceToNow(new Date(project.updatedAt), {
-                              addSuffix: true,
-                            })}
+                              {formatDistanceToNow(new Date(project.updatedAt || project.createdAt || Date.now()), {
+                                addSuffix: true,
+                              })}
+                            </div>
                           </div>
-                        </div>
-
-                        <Button
-                          variant="outline"
                           size="sm"
                           className="gap-2 font-semibold bg-transparent"
                         >
