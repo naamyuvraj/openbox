@@ -8,7 +8,7 @@ dotenv.config();
 // ==================================
 // KEEP-ALIVE CRON JOB (Runs every 10 minutes)
 // ==================================
-const RENDER_URL = process.env.API_BASE_URL || "https://openbox-r8z3.onrender.com";
+const RENDER_URL = process.env.API_BASE_URL || "https://openbox-0tuh.onrender.com";
 
 cron.schedule("*/10 * * * *", async () => {
   console.log("⏱️ Cron Job Triggered: Pinging server to keep it alive...");
