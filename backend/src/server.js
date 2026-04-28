@@ -6,20 +6,23 @@ import axios from "axios";
 dotenv.config();
 
 // ==================================
-// CRON JOB (Runs every 12 minutes)
+// KEEP-ALIVE CRON JOB (Runs every 10 minutes)
 // ==================================
-cron.schedule("*/12 * * * *", () => {
-  console.log("⏱️ Cron Job Triggered: Every 12 minutes");
+const RENDER_URL = process.env.API_BASE_URL || "https://openbox-r8z3.onrender.com";
 
+cron.schedule("*/10 * * * *", async () => {
+  console.log("⏱️ Cron Job Triggered: Pinging server to keep it alive...");
+  try {
+    await axios.get(`${RENDER_URL}/ping`);
+    console.log("✅ Keep-alive ping successful.");
+  } catch (error) {
+    console.error("❌ Keep-alive ping failed:", error.message);
+  }
 });
 
+// Remove old setInterval strategy in favor of the controlled cron
 // ==================================
 // Start Server
-// ==================================
-
-setInterval(() => {
-  axios.get("https://openbox-r8z3.onrender.com/").catch(() => {});
-}, 5 * 60 * 1000);
 
 
 const PORT = process.env.PORT || 5170;
