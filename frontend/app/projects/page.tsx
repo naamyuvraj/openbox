@@ -49,6 +49,7 @@ export default function ProjectsPage() {
 
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [folderFiles, setFolderFiles] = useState<FileList | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // ----------------------------
   // FETCH USER PROJECTS
@@ -81,6 +82,8 @@ export default function ProjectsPage() {
   // ----------------------------
   async function handleUploadProject() {
     if (!folderFiles || folderFiles.length === 0) return;
+
+    setIsUploading(true);
 
     const zip = new JSZip();
 
@@ -147,10 +150,14 @@ export default function ProjectsPage() {
           setIsCreatingProject(false);
           setProjectName("");
           setFolderFiles(null);
-          load();          return;
+          load();          
+          setIsUploading(false);
+          return;
         }
+      setIsUploading(false);
       alert(data.error || data.message || "Upload failed");
     } catch (err) {
+      setIsUploading(false);
       console.error("Upload error", err);
       alert("Upload failed. Check console.");
     }
@@ -276,7 +283,9 @@ export default function ProjectsPage() {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleUploadProject}>Upload</Button>
+                    <Button onClick={handleUploadProject} disabled={isUploading}>
+                      {isUploading ? "Uploading..." : "Upload"}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
