@@ -158,6 +158,31 @@ export async function getUserProjects() {
   }
 }
 
+export async function deleteProject(projectId) {
+  try {
+    const token = getAuthToken();
+
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to delete project');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    throw error;
+  }
+}
+
 export async function getProjectById(projectId) {
   try {
     const token = getAuthToken();

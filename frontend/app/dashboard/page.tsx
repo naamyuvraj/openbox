@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label"
 import { Plus, Search, MoreVertical, Trash2, Edit, ArrowRight, FileText, Folder } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { formatDistanceToNow } from "date-fns"
-import { getUserProjects, createProject, commitChanges } from "../service/app"
+import { getUserProjects, createProject, commitChanges, deleteProject } from "../service/app"
 
 interface ProjectItem {
   id: string
@@ -158,8 +158,13 @@ export default function DashboardPage() {
     }
   }
 
-  const handleDeleteProject = (id: string) => {
-    setProjects(projects.filter((p) => p._id !== id))
+  const handleDeleteProject = async (id: string) => {
+    try {
+      await deleteProject(id);
+      setProjects(projects.filter((p) => p._id !== id));
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+    }
   }
 
   const handleDeleteItem = (projectId: string, itemId: string) => {
