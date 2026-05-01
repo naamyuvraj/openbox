@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label"
 import { Plus, Search, MoreVertical, Trash2, Edit, ArrowRight, FileText, Folder } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { formatDistanceToNow } from "date-fns"
-import { getUserProjects, createProject } from "../service/app"
+import { getUserProjects, createProject, commitChanges } from "../service/app"
 
 interface ProjectItem {
   id: string
@@ -94,26 +94,39 @@ export default function DashboardPage() {
   }
 
   // file upload wala scene
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files && selectedProjectId) {
-      Array.from(files).forEach((file) => {
-        const newItem = {
-          id: Date.now().toString() + Math.random(),
-          name: file.name,
-          type: "file" as const,
-        }
-        setProjects((prevProjects) =>
-          prevProjects.map((p) =>
-            p._id === selectedProjectId
-              ? {
-                  ...p,
-                  items: [...(p.items || []), newItem],
-                }
-              : p,
-          ),
-        )
-      })
+      try {
+        const filePromises = Array.from(files).map((file) => {
+          return new Promise<{ file_name: string; file_path: string; content: string }>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = (e) => {
+              resolve({
+                file_name: file.name,
+                file_path: file.name,
+                content: (e.target?.result as string) || "",
+              })
+            }
+            reader.onerror = reject
+            reader.readAsText(file)
+          })
+        })
+
+        const filesData = await Promise.all(filePromises)
+
+        await commitChanges({
+          repo_id: selectedProjectId,
+          commit_title: "Uploaded files via dashboard",
+          message: "Uploaded files",
+          files: filesData,
+        })
+
+        fetchProjects()
+      } catch (error) {
+        console.error("Failed to upload files:", error)
+      }
+
       setShowAddItem(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ""

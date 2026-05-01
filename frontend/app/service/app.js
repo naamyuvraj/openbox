@@ -335,14 +335,17 @@ export async function getFileHistory(fileId) {
   }
 }
 
-export async function commitChanges(formData) {
+export async function commitChanges(payload) {
   try {
     const token = getAuthToken();
 
     const response = await fetch(`${API_BASE_URL}/api/commits`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formData,
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
