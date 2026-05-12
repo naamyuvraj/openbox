@@ -1,73 +1,57 @@
-// yeh sara backend routes hain 
-// All protected routes use JWT:
-//   Authorization: Bearer <token>
-// auth: (/api/auth)
-//
-// post /api/auth/register
-//   body:
-//     {
-//       "name": string,
-//       "email": string,
-//       "password": string,
-//       "username"?: string
-//     }
-//
-// post /api/auth/login
-//   body (JSON):
-//     {
-//       "email": string,
-//       "password": string
-//     }
+# OpenBox 📦
 
-//
-// get /api/auth/google
-//
-// get /api/auth/google/callback
+OpenBox is a web-based collaborative code workspace inspired by CodeSandbox. It features an intuitive IDE environment where multiple developers can work on the same codebase seamlessly while tracking changes, managing files, and compiling code.
 
-//
-// get /api/auth/profile
-//   headers: Authorization: Bearer <token>
-//
-// repos (/projects)
-//
-// post /projects
-//   Body (JSON):
-//     {
-//       "name": string,
-//       "description"?: string
-//     }
-//
-// get /projects
-//   Returns all projects of the logged‑in user.
+## 🚀 Features
 
-//
-// get /projects/:id
-//   Returns single project by id.
+- **Project Management:** Create, upload, and organize coding projects.
+- **Collaborative IDE:** Share project workspaces and edit files.
+- **Version Control:** Built-in commit tracking and activity dashboard.
+- **Performant File Handling:** Bulk directory uploads using JSZip and up to 50MB limits for seamless processing.
+- **Real-Time Data (Coming Soon):** Live collaboration metrics.
 
-//
-// post /projects/collaborators/:id
-//   Body (JSON):
-//     {
-//       "collaboratorId": string   // user _id
-//     }
+## 🛠 Tech Stack
 
-//
-// profile (/user)
-// get /user/profile
-//
-//
-// files (/api/files)
-//
-// get /api/files/:id
-//
-// get /api/files/:id/history
-//   Response:
-//     { "commits": CommitDocument[] }
-//
-// COMMITS & ZIP UPLOAD (/api/commits)
-//
-// post /api/commits
-//
-// get /api/commits/:id
-//
-// get /api/commits/repo/:repoId
+**Frontend**
+- Next.js 14+ (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+
+**Backend**
+- Node.js
+- Express
+- MongoDB / Mongoose
+
+## 🏁 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- MongoDB connection string
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/openbox.git
+   cd openbox
+   ```
+
+2. **Backend Setup**
+   ```bash
+   cd backend
+   npm install
+   # Create a .env file with your variables (MONGO_URI, JWT_SECRET, etc.)
+   npm run start
+   ```
+
+3. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   # Create a .env.local mapped to your backend API
+   npm run dev
+   ```
+
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser!
