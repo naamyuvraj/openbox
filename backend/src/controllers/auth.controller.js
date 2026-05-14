@@ -1,4 +1,5 @@
 import passport from "passport";
+import jwt from "jsonwebtoken";
 
 // Auth controller class
 class AuthController {
@@ -9,13 +10,21 @@ class AuthController {
 
   // Google callback handler
   googleCallback(req, res, next) {
-    const defaultRedirect = process.env.NODE_ENV === "production"
-      ? "https://openbox-dev4ce.vercel.app/dashboard"
-      : "http://localhost:3000/dashboard";
+    passport.authenticate("google", { failureRedirect: "/login" }, (err, user) => {
+      if (err || !user) {
+        return res.redirect("/login");
+      }
+      
+      // Generate the JWT token that the frontend requires
+      const token = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
 
-    passport.authenticate("google", {
-      failureRedirect: "/login",
-      successRedirect: process.env.FRONTEND_URL || defaultRedirect,
+      const frontendUrl = "https://openbox-dev4ce.vercel.app";
+      // Redirect to the frontend OAuth page so it can save the token
+      return res.redirect(`${frontendUrl}/oauth?token=${token}`);
     })(req, res, next);
   }
 
@@ -24,11 +33,7 @@ class AuthController {
     req.logout((err) => {
       if (err) return next(err);
       
-      const defaultLogout = process.env.NODE_ENV === "production"
-        ? "https://openbox-dev4ce.vercel.app/"
-        : "http://localhost:3000/";
-        
-      res.redirect(process.env.FRONTEND_URL || defaultLogout);
+      res.redirect("https://openbox-dev4ce.vercel.app/");
     });
   }
 }
